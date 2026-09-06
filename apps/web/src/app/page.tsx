@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { ScrollReadingText } from '@/components/scroll-reading-text';
 
 const products = [
   ['Products', 'Guides, downloads, prompts, templates, code, and original work.'],
@@ -47,7 +48,7 @@ export default function Home() {
       </section>
 
       <section id="what" className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-0 lg:py-24"><div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-0"><div className="lg:px-12 lg:pr-20"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#ff4d00]">THE ONE-STOP BUSINESS HOME</p><h2 className="mt-5 max-w-md text-5xl font-black leading-[0.83] tracking-[-0.08em] sm:text-6xl">Let your audience show up their way.</h2></div><div className="border-t border-black">{products.map(([name, detail], index) => <article className="grid grid-cols-[44px_1fr] items-start gap-4 border-b border-black py-6 sm:grid-cols-[64px_1fr] sm:gap-7" key={name}><span className="pt-1 font-mono text-xs text-[#ff4d00]">0{index + 1}</span><div><h3 className="text-3xl font-black tracking-[-0.06em]">{name}</h3><p className="mt-2 max-w-lg text-lg leading-7 text-black/65">{detail}</p></div></article>)}</div></div>
-        <p className="mt-16 max-w-4xl text-3xl font-black leading-[0.94] tracking-[-0.06em] sm:text-5xl">Whether someone wants to buy a workflow, book an hour, join your world, or simply send appreciation, they should never have to leave your brand to do it.</p>
+        <ScrollReadingText>Whether someone wants to buy a workflow, book an hour, join your world, or simply send appreciation, they should never have to leave your brand to do it.</ScrollReadingText>
       </section>
 
       <section className="border-y border-black bg-black text-white"><div className="mx-auto grid max-w-[1440px] lg:grid-cols-[0.9fr_1.1fr]"><div className="px-5 py-16 sm:px-8 lg:px-12"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#ff4d00]">A BETTER DEAL FOR CREATORS</p><p className="mt-20 max-w-md text-5xl font-black leading-[0.82] tracking-[-0.08em] sm:text-7xl">Keep what you earn.</p></div><div className="flex items-end border-t border-white/30 px-5 py-16 sm:px-8 lg:border-l lg:border-t-0 lg:px-12"><p className="max-w-lg text-xl leading-8 text-white/70">No Ownlane commission on your sale, gift, tip, or booking. We&apos;re building a subscription-led platform because your momentum should belong to you.</p></div></div></section>

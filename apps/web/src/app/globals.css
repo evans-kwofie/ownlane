@@ -1,3 +1,18 @@
+
+.reading-text {
+  --reading-progress: 0;
+  background: linear-gradient(90deg, #000 0 calc(var(--reading-progress) * 100%), #a3a3a3 calc(var(--reading-progress) * 100%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-text {
+    background: none;
+    color: #000;
+  }
+}
 @import "tailwindcss";
 
 :root {
