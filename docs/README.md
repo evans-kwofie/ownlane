@@ -12,6 +12,7 @@ This folder captures the initial product and brand direction.
 - [Pricing](pricing.md) — creator-first, zero-commission pricing model and plan definitions.
 - [Brand](brand.md) — name rationale, message, and early voice guidelines.
 - [Repository architecture](architecture.md) — monorepo layout and tooling decisions.
+- [Target customers](target-customers.md) — customer segments, interview priorities, and discovery guide.
 
 ## Core promise
 
