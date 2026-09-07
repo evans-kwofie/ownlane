@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { OwnlaneMark } from "@/components/ownlane-mark";
+import { SiteHeader } from "@/components/site-header";
 import { ScrollReadingText } from '@/components/scroll-reading-text';
 
 const products = [
@@ -50,11 +50,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <nav className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 sm:px-8">
-        <a aria-label="Ownlane home" className="flex items-center gap-2 text-xl font-black tracking-[-0.08em]" href="#top"><OwnlaneMark variant="open" className="h-6 w-6 text-[#ff4d00]" /><span>OWNLANE</span></a>
-        <div className="hidden gap-8 text-xs font-bold uppercase tracking-[0.12em] md:flex"><a href="/why-ownlane">Why Ownlane</a><a href="#what">What you can do</a></div>
-        <a className="border border-black px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:bg-black hover:text-white" href="#early-access">Join early</a>
-      </nav>
+      <SiteHeader />
 
       <section id="top" className="mx-auto max-w-[1440px] border-t border-black">
         <div className="flex min-h-[640px] flex-col items-center justify-between px-5 py-7 text-center sm:px-8 lg:px-12">

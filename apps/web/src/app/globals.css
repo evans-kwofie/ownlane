@@ -1,4 +1,13 @@
 
+.mobile-menu-item {
+  animation: menu-staccato 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes menu-staccato {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .reading-text {
   --reading-progress: 0;
   background: linear-gradient(90deg, #000 0 calc(var(--reading-progress) * 100%), #a3a3a3 calc(var(--reading-progress) * 100%) 100%);
@@ -81,4 +90,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .reveal { animation: none; }
   .marquee-track { animation: none; }
+  .mobile-menu-item { animation: none; }
 }
