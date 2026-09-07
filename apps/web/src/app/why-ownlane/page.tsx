@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { OwnlaneMark } from "@/components/ownlane-mark";
+import { SiteHeader } from "@/components/site-header";
 import { ScrollReadingText } from "@/components/scroll-reading-text";
 
 export const metadata: Metadata = {
@@ -21,11 +21,7 @@ const outcomes = [
 export default function WhyOwnlanePage() {
   return (
     <main className="bg-white text-black">
-      <nav className="mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 sm:px-8">
-        <Link aria-label="Ownlane home" className="flex items-center gap-2 text-xl font-black tracking-[-0.08em]" href="/"><OwnlaneMark variant="open" className="h-6 w-6 text-[#ff4d00]" /><span>OWNLANE</span></Link>
-        <div className="hidden gap-8 text-xs font-bold uppercase tracking-[0.12em] md:flex"><Link href="/">Home</Link><a href="#difference">The difference</a></div>
-        <Link className="border border-black px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:bg-black hover:text-white" href="/#early-access">Join early</Link>
-      </nav>
+      <SiteHeader />
 
       <section className="mx-auto max-w-[1440px] border-y border-black">
         <div className="grid min-h-[650px] lg:grid-cols-[0.9fr_1.1fr]">
