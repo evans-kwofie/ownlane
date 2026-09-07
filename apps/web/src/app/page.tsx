@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { SiteHeader } from "@/components/site-header";
 import { ScrollReadingText } from '@/components/scroll-reading-text';
+import { WaitlistForm } from "@/components/waitlist-form";
 
 const products = [
   ['Products', 'Guides, downloads, prompts, templates, code, and original work.'],
@@ -74,7 +75,7 @@ export default function Home() {
 
       <section className="border-y border-black bg-black text-white"><div className="mx-auto grid max-w-[1440px] lg:grid-cols-[0.9fr_1.1fr]"><div className="px-5 py-16 sm:px-8 lg:px-12"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#ff4d00]">A BETTER DEAL FOR CREATORS</p><p className="mt-20 max-w-md text-5xl font-black leading-[0.82] tracking-[-0.08em] sm:text-7xl">Keep what you earn.</p></div><div className="flex items-end border-t border-white/30 px-5 py-16 sm:px-8 lg:border-l lg:border-t-0 lg:px-12"><p className="max-w-lg text-xl leading-8 text-white/70">No Ownlane commission on your sale, gift, tip, or booking. We&apos;re building a subscription-led platform because your momentum should belong to you.</p></div></div></section>
 
-      <section id="early-access" className="mx-auto max-w-[1440px] px-5 py-24 text-center sm:px-8 lg:py-32"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[#ff4d00]">THE FIRST ONES SET THE TONE</p><h2 className="mx-auto mt-7 max-w-5xl text-[clamp(4.5rem,12vw,11rem)] font-black leading-[0.72] tracking-[-0.11em]">MAKE YOUR<br /><span className="text-[#ff4d00]">MOVE.</span></h2><p className="mx-auto mt-10 max-w-lg text-lg leading-7 text-black/65">We&apos;re building the creator business home: one place to sell what you make, offer your time, and grow the people who support you. If that&apos;s you, come early.</p><a className="button-pour mt-9 inline-flex bg-[#ff4d00] px-7 py-4 text-sm font-bold uppercase tracking-[0.1em] text-black [--button-fill:#000000] hover:text-white" href="mailto:hello@useownlane.com?subject=Ownlane%20early%20access"><span>I&apos;m claiming my lane</span></a></section>
+      <section id="early-access" className="mx-auto max-w-[1440px] px-5 py-24 text-center sm:px-8 lg:py-32"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[#ff4d00]">THE FIRST ONES SET THE TONE</p><h2 className="mx-auto mt-7 max-w-5xl text-[clamp(4.5rem,12vw,11rem)] font-black leading-[0.72] tracking-[-0.11em]">MAKE YOUR<br /><span className="text-[#ff4d00]">MOVE.</span></h2><p className="mx-auto mt-10 max-w-lg text-lg leading-7 text-black/65">We&apos;re building the creator business home: one place to sell what you make, offer your time, and grow the people who support you. If that&apos;s you, come early.</p><WaitlistForm /></section>
 
       <footer className="overflow-hidden border-t border-black pt-5"><div className="mx-auto flex max-w-[1440px] justify-between px-5 text-[10px] font-bold uppercase tracking-[0.12em] sm:px-8"><span>Ownlane © {new Date().getFullYear()}</span><span>Built for the independent</span></div><p className="-mb-[0.15em] mt-4 whitespace-nowrap text-center text-[24vw] font-black leading-none tracking-[-0.12em]">OWNLANE</p></footer>
     </main>
