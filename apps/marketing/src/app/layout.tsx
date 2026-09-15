@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
 const siteUrl = new URL("https://useownlane.com");
-const description = "Ownlane is the creator operating system: one branded home for products, services, memberships, support, and the audience behind your business.";
+const description = "Ownlane is the control centre for your online identity: one profile, every platform, always current.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
-  title: { default: "Ownlane | Your brand. Your audience. Your business.", template: "%s | Ownlane" },
+  title: { default: "Ownlane | One profile. Every platform. Always current.", template: "%s | Ownlane" },
   description,
   applicationName: "Ownlane",
   keywords: ["creator platform", "creator storefront", "sell digital products", "creator business", "AI products", "creator memberships", "creator bookings"],
@@ -24,6 +25,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#ff4d00", colorScheme: "light" };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return <html lang="en" className="h-full antialiased"><body className="flex min-h-full flex-col"><SmoothScroll>{children}</SmoothScroll></body></html>;
 }

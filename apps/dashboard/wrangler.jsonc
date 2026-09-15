@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ownlane-dashboard",
+  "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{ "binding": "DB", "database_name": "ownlane", "database_id": "<your-d1-database-id>", "migrations_dir": "migrations" }],
+  "r2_buckets": [{ "binding": "ASSETS_BUCKET", "bucket_name": "ownlane-assets" }],
+  "kv_namespaces": [{ "binding": "OAUTH_STATE", "id": "<your-oauth-state-kv-namespace-id>" }],
+  "queues": { "producers": [{ "binding": "SYNC_QUEUE", "queue": "ownlane-profile-sync" }] }
+}

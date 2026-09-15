@@ -7,7 +7,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:all": "turbo run dev",
-    "dev:web": "pnpm --filter web dev",
+    "dev:marketing": "pnpm --filter marketing dev",
     "dev:dashboard": "pnpm --filter dashboard dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
