@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { OwnlaneMark } from "@/components/ownlane-mark";
+import { OwnlaneMark } from "@ownlane/ui/components/ownlane-mark";
 
 const navigation = [
   { href: "/why-ownlane", label: "Why Ownlane" },

@@ -7,6 +7,8 @@ Ownlane is an online identity operating system: the control centre for a person'
 ## Documents
 
 - [Identity OS product specification](identity-os-product-spec.md) — the complete product scope, Cloudflare-native architecture, and commercial model.
+- [Frontend engineering guide](frontend-engineering.md) — shared UI, forms, validation, state, and interaction conventions.
+- [Dashboard navigation map](dashboard-navigation.md) — the signed-in rail: what ships now, reserved routes, gating, and grouping.
 
 ## Core promise
 

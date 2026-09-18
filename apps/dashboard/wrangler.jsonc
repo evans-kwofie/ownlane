@@ -1,10 +1,45 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ownlane-dashboard",
-  "compatibility_date": "2026-09-15",
-  "compatibility_flags": ["nodejs_compat"],
-  "d1_databases": [{ "binding": "DB", "database_name": "ownlane", "database_id": "<your-d1-database-id>", "migrations_dir": "migrations" }],
-  "r2_buckets": [{ "binding": "ASSETS_BUCKET", "bucket_name": "ownlane-assets" }],
-  "kv_namespaces": [{ "binding": "OAUTH_STATE", "id": "<your-oauth-state-kv-namespace-id>" }],
-  "queues": { "producers": [{ "binding": "SYNC_QUEUE", "queue": "ownlane-profile-sync" }] }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ownlane-dashboard",
+	"main": "./workers/app.ts",
+	"vars": {
+		// Where published profiles live. Empty in .dev.vars means "this host".
+		"PUBLIC_SITE_ORIGIN": "https://useownlane.com"
+	},
+	"triggers": {
+		// Scheduled profile changes are checked every five minutes.
+		"crons": ["*/5 * * * *"]
+	},
+	"compatibility_date": "2026-09-15",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "ownlane",
+			"database_id": "6bc99c02-19be-45af-a732-10dea3c38c88",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "ASSETS_BUCKET",
+			"bucket_name": "ownlane-assets"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "OAUTH_STATE",
+			"id": "<your-oauth-state-kv-namespace-id>"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "SYNC_QUEUE",
+				"queue": "ownlane-profile-sync"
+			}
+		]
+	}
 }

@@ -1,16 +1,33 @@
 -- Canonical identity data. OAuth tokens are deliberately not stored in this
 -- initial schema; they must be encrypted before provider connections ship.
-CREATE TABLE IF NOT EXISTS organizations (
+
+-- A workspace is one identity: a person, a company, or an agency's client.
+-- Its slug is the address everything is scoped to (/app/<slug>/...), so it is
+-- unique across Ownlane and renameable, with old slugs redirected.
+CREATE TABLE IF NOT EXISTS workspaces (
   id TEXT PRIMARY KEY,
+  slug TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'personal' CHECK (kind IN ('personal', 'brand')),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Who may act in a workspace, and with what authority. The identity provider
+-- owns accounts; this table owns access.
+CREATE TABLE IF NOT EXISTS workspace_members (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'owner' CHECK (role IN ('owner', 'admin', 'editor', 'viewer')),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (workspace_id, user_id)
+);
+
+-- One canonical profile per workspace: the source every platform copies from.
 CREATE TABLE IF NOT EXISTS profiles (
   id TEXT PRIMARY KEY,
-  organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  slug TEXT NOT NULL UNIQUE,
+  workspace_id TEXT NOT NULL UNIQUE REFERENCES workspaces(id) ON DELETE CASCADE,
   display_name TEXT NOT NULL,
   short_bio TEXT,
   long_bio TEXT,
@@ -48,7 +65,7 @@ CREATE TABLE IF NOT EXISTS connected_accounts (
   last_synced_at TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(profile_id, provider, provider_account_id)
+  UNIQUE (profile_id, provider, provider_account_id)
 );
 
 CREATE TABLE IF NOT EXISTS sync_jobs (
@@ -66,6 +83,7 @@ CREATE TABLE IF NOT EXISTS sync_jobs (
   completed_at TEXT
 );
 
+CREATE INDEX IF NOT EXISTS workspace_members_user_idx ON workspace_members(user_id);
 CREATE INDEX IF NOT EXISTS profile_links_profile_position_idx ON profile_links(profile_id, position);
 CREATE INDEX IF NOT EXISTS connected_accounts_profile_idx ON connected_accounts(profile_id);
 CREATE INDEX IF NOT EXISTS sync_jobs_profile_status_idx ON sync_jobs(profile_id, status, created_at);

@@ -14,20 +14,261 @@ type Pages = {
   "/": {
     params: {};
   };
+  "/continue": {
+    params: {};
+  };
+  "/assets/:id": {
+    params: {
+      "id": string;
+    };
+  };
+  "/app": {
+    params: {};
+  };
+  "/app/account": {
+    params: {};
+  };
+  "/app/brands/new": {
+    params: {};
+  };
+  "/app/brands/delete": {
+    params: {};
+  };
+  "/app/:workspace": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/profile": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/profile/configuration": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/assets": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/links": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/links/new": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/links/:linkId": {
+    params: {
+      "workspace": string;
+      "linkId": string;
+    };
+  };
+  "/app/:workspace/links/collections/:collectionId": {
+    params: {
+      "workspace": string;
+      "collectionId": string;
+    };
+  };
+  "/app/:workspace/connections": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/content": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/activity": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/health": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/analytics": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/audience": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/developer": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/app/:workspace/settings": {
+    params: {
+      "workspace": string;
+    };
+  };
+  "/:slug/contact.vcf": {
+    params: {
+      "slug": string;
+    };
+  };
+  "/:slug": {
+    params: {
+      "slug": string;
+    };
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/";
+    page: "/" | "/continue" | "/assets/:id" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings" | "/:slug/contact.vcf" | "/:slug";
   };
   "routes/home.tsx": {
     id: "routes/home";
     page: "/";
+  };
+  "routes/continue.tsx": {
+    id: "routes/continue";
+    page: "/continue";
+  };
+  "routes/assets.tsx": {
+    id: "routes/assets";
+    page: "/assets/:id";
+  };
+  "routes/app/layout.tsx": {
+    id: "routes/app/layout";
+    page: "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings";
+  };
+  "routes/app/index-redirect.tsx": {
+    id: "routes/app/index-redirect";
+    page: "/app";
+  };
+  "routes/app/account.tsx": {
+    id: "routes/app/account";
+    page: "/app/account";
+  };
+  "routes/app/create-brand.tsx": {
+    id: "routes/app/create-brand";
+    page: "/app/brands/new";
+  };
+  "routes/app/delete-brand.tsx": {
+    id: "routes/app/delete-brand";
+    page: "/app/brands/delete";
+  };
+  "routes/app/workspace.tsx": {
+    id: "routes/app/workspace";
+    page: "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings";
+  };
+  "routes/app/overview.tsx": {
+    id: "routes/app/overview";
+    page: "/app/:workspace";
+  };
+  "routes/app/profile.tsx": {
+    id: "routes/app/profile";
+    page: "/app/:workspace/profile";
+  };
+  "routes/app/site.tsx": {
+    id: "routes/app/site";
+    page: "/app/:workspace/profile/configuration";
+  };
+  "routes/app/assets.tsx": {
+    id: "routes/app/assets";
+    page: "/app/:workspace/assets";
+  };
+  "routes/app/links.tsx": {
+    id: "routes/app/links";
+    page: "/app/:workspace/links";
+  };
+  "routes/app/link-editor.tsx": {
+    id: "routes/app/link-new";
+    page: "/app/:workspace/links/new";
+  } | {
+    id: "routes/app/link-edit";
+    page: "/app/:workspace/links/:linkId";
+  };
+  "routes/app/collection-editor.tsx": {
+    id: "routes/app/collection-editor";
+    page: "/app/:workspace/links/collections/:collectionId";
+  };
+  "routes/app/connections.tsx": {
+    id: "routes/app/connections";
+    page: "/app/:workspace/connections";
+  };
+  "routes/app/content.tsx": {
+    id: "routes/app/content";
+    page: "/app/:workspace/content";
+  };
+  "routes/app/activity.tsx": {
+    id: "routes/app/activity";
+    page: "/app/:workspace/activity";
+  };
+  "routes/app/health.tsx": {
+    id: "routes/app/health";
+    page: "/app/:workspace/health";
+  };
+  "routes/app/analytics.tsx": {
+    id: "routes/app/analytics";
+    page: "/app/:workspace/analytics";
+  };
+  "routes/app/audience.tsx": {
+    id: "routes/app/audience";
+    page: "/app/:workspace/audience";
+  };
+  "routes/app/developer.tsx": {
+    id: "routes/app/developer";
+    page: "/app/:workspace/developer";
+  };
+  "routes/app/settings.tsx": {
+    id: "routes/app/settings";
+    page: "/app/:workspace/settings";
+  };
+  "routes/public-profile-vcard.tsx": {
+    id: "routes/public-profile-vcard";
+    page: "/:slug/contact.vcf";
+  };
+  "routes/public-profile.tsx": {
+    id: "routes/public-profile";
+    page: "/:slug";
   };
 };
 
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
+  "routes/continue": typeof import("./app/routes/continue.tsx");
+  "routes/assets": typeof import("./app/routes/assets.tsx");
+  "routes/app/layout": typeof import("./app/routes/app/layout.tsx");
+  "routes/app/index-redirect": typeof import("./app/routes/app/index-redirect.tsx");
+  "routes/app/account": typeof import("./app/routes/app/account.tsx");
+  "routes/app/create-brand": typeof import("./app/routes/app/create-brand.tsx");
+  "routes/app/delete-brand": typeof import("./app/routes/app/delete-brand.tsx");
+  "routes/app/workspace": typeof import("./app/routes/app/workspace.tsx");
+  "routes/app/overview": typeof import("./app/routes/app/overview.tsx");
+  "routes/app/profile": typeof import("./app/routes/app/profile.tsx");
+  "routes/app/site": typeof import("./app/routes/app/site.tsx");
+  "routes/app/assets": typeof import("./app/routes/app/assets.tsx");
+  "routes/app/links": typeof import("./app/routes/app/links.tsx");
+  "routes/app/link-new": typeof import("./app/routes/app/link-editor.tsx");
+  "routes/app/link-edit": typeof import("./app/routes/app/link-editor.tsx");
+  "routes/app/collection-editor": typeof import("./app/routes/app/collection-editor.tsx");
+  "routes/app/connections": typeof import("./app/routes/app/connections.tsx");
+  "routes/app/content": typeof import("./app/routes/app/content.tsx");
+  "routes/app/activity": typeof import("./app/routes/app/activity.tsx");
+  "routes/app/health": typeof import("./app/routes/app/health.tsx");
+  "routes/app/analytics": typeof import("./app/routes/app/analytics.tsx");
+  "routes/app/audience": typeof import("./app/routes/app/audience.tsx");
+  "routes/app/developer": typeof import("./app/routes/app/developer.tsx");
+  "routes/app/settings": typeof import("./app/routes/app/settings.tsx");
+  "routes/public-profile-vcard": typeof import("./app/routes/public-profile-vcard.tsx");
+  "routes/public-profile": typeof import("./app/routes/public-profile.tsx");
 };

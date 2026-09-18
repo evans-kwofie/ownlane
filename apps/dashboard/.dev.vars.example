@@ -1,3 +1,7 @@
 # Local-only values. Copy this file to .dev.vars; never commit the copy.
 # Provider credentials will be added only when individual OAuth integrations ship.
 OWNLANE_TOKEN_ENCRYPTION_KEY=replace-with-a-32-byte-base64-key
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_with_your_clerk_key
+CLERK_SECRET_KEY=sk_test_replace_with_your_clerk_secret
+# Leave empty in development so "View site" points at this dev server.
+PUBLIC_SITE_ORIGIN=

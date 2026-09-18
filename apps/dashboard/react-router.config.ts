@@ -1,7 +1,7 @@
 import type { Config } from '@react-router/dev/config';
 
 export default {
-  // The dashboard is an authenticated application. It does not need SEO or SSR
-  // at launch; React Router can enable SSR later without rewriting routes.
-  ssr: false,
+  // The dashboard runs on the server so loaders and actions can reach D1 and
+  // verify the session — a browser cannot hold a database binding or a secret.
+  ssr: true,
 } satisfies Config;
