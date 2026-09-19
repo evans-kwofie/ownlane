@@ -29,6 +29,7 @@ export default [
       route('links/:linkId', 'routes/app/link-editor.tsx', { id: 'routes/app/link-edit' }),
       route('links/collections/:collectionId', 'routes/app/collection-editor.tsx'),
       route('connections', 'routes/app/connections.tsx'),
+      route('connections/new', 'routes/app/connection-catalog.tsx'),
       route('content', 'routes/app/content.tsx'),
 
       // Insight

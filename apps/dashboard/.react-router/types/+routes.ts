@@ -81,6 +81,11 @@ type Pages = {
       "workspace": string;
     };
   };
+  "/app/:workspace/connections/new": {
+    params: {
+      "workspace": string;
+    };
+  };
   "/app/:workspace/content": {
     params: {
       "workspace": string;
@@ -131,7 +136,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/continue" | "/assets/:id" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings" | "/:slug/contact.vcf" | "/:slug";
+    page: "/" | "/continue" | "/assets/:id" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings" | "/:slug/contact.vcf" | "/:slug";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -147,7 +152,7 @@ type RouteFiles = {
   };
   "routes/app/layout.tsx": {
     id: "routes/app/layout";
-    page: "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings";
+    page: "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings";
   };
   "routes/app/index-redirect.tsx": {
     id: "routes/app/index-redirect";
@@ -167,7 +172,7 @@ type RouteFiles = {
   };
   "routes/app/workspace.tsx": {
     id: "routes/app/workspace";
-    page: "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings";
+    page: "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings";
   };
   "routes/app/overview.tsx": {
     id: "routes/app/overview";
@@ -203,6 +208,10 @@ type RouteFiles = {
   "routes/app/connections.tsx": {
     id: "routes/app/connections";
     page: "/app/:workspace/connections";
+  };
+  "routes/app/connection-catalog.tsx": {
+    id: "routes/app/connection-catalog";
+    page: "/app/:workspace/connections/new";
   };
   "routes/app/content.tsx": {
     id: "routes/app/content";
@@ -262,6 +271,7 @@ type RouteModules = {
   "routes/app/link-edit": typeof import("./app/routes/app/link-editor.tsx");
   "routes/app/collection-editor": typeof import("./app/routes/app/collection-editor.tsx");
   "routes/app/connections": typeof import("./app/routes/app/connections.tsx");
+  "routes/app/connection-catalog": typeof import("./app/routes/app/connection-catalog.tsx");
   "routes/app/content": typeof import("./app/routes/app/content.tsx");
   "routes/app/activity": typeof import("./app/routes/app/activity.tsx");
   "routes/app/health": typeof import("./app/routes/app/health.tsx");
