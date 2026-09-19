@@ -25,6 +25,7 @@ const USE_LABELS: Record<NonNullable<AssetRecord['usedAs']>, string> = {
   avatar: 'Profile photo',
   logo: 'Logo',
   cover: 'Cover',
+  'link-thumbnail': 'Link thumbnail',
 };
 
 export function formatBytes(bytes: number) {

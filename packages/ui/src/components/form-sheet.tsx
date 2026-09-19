@@ -38,7 +38,7 @@ export function FormSheet({
   footer?: React.ReactNode;
   children: React.ReactNode;
   /** 'wide' suits lists and timelines; forms stay at the default width. */
-  size?: 'default' | 'wide';
+  size?: 'default' | 'wide' | 'extra-wide';
 }) {
   const isSmallScreen = useIsSmallScreen();
 
@@ -47,7 +47,15 @@ export function FormSheet({
   if (!isSmallScreen) {
     return (
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent className={size === 'wide' ? 'sm:max-w-[580px]' : 'sm:max-w-[460px]'}>
+        <DialogContent
+          className={
+            size === 'extra-wide'
+              ? 'sm:max-w-[760px]'
+              : size === 'wide'
+                ? 'sm:max-w-[580px]'
+                : 'sm:max-w-[460px]'
+          }
+        >
           <DialogHeader>
             <DialogTitle className="text-[17px] font-medium tracking-[-0.01em] break-words">
               {title}

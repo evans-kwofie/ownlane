@@ -4,6 +4,12 @@ import { toCapitalised } from '@ownlane/ui/lib/text';
 
 import { ProfileActions } from '../components/profile-actions';
 import { ProfileToc, type TocEntry } from '../components/profile-toc';
+import {
+  PlatformIcon,
+  detectLinkPlatform,
+  getLinkPlatform,
+  platformColors,
+} from '../features/links/platforms';
 import { cloudflare } from '../lib/cloudflare';
 import { PROFILE_FIELDS, fieldLabel, publicFields, type PublicSlot } from '../lib/profile-fields';
 import {
@@ -119,6 +125,23 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
       entry.field !== 'country' &&
       !(entry.field === 'location' && place),
   );
+  const featuredLinks = page.links.filter((link) => !link.collectionId);
+  const linkSections = Array.from(
+    new Map(
+      page.links
+        .filter((link) => link.collectionId)
+        .map((link) => [
+          link.collectionId,
+          {
+            id: link.collectionId!,
+            title: link.collectionTitle!,
+            description: link.collectionDescription ?? '',
+            layout: link.collectionLayout ?? 'list',
+            links: page.links.filter((entry) => entry.collectionId === link.collectionId),
+          },
+        ]),
+    ).values(),
+  );
 
   // Only sections with something in them are offered for skipping to.
   const toc: TocEntry[] = [
@@ -216,27 +239,25 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
           </Block>
         ))}
 
-        {page.links.length ? (
+        {featuredLinks.length ? (
           <Block id="links" title="Links">
-            <ul className="divide-y divide-border/70 overflow-hidden rounded-lg border border-border/70">
-              {page.links.map((link) => (
-                <li key={link.id}>
-                  <a
-                    className="flex items-center justify-between gap-4 px-4 py-3 text-[14px] transition-colors hover:bg-accent/50"
-                    href={link.url}
-                    rel="noreferrer noopener"
-                    target="_blank"
-                  >
-                    <span className="truncate font-medium">{link.label}</span>
-                    <span aria-hidden="true" className="shrink-0 text-muted-foreground">
-                      ↗
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <PublicLinks links={featuredLinks} />
           </Block>
         ) : null}
+        {linkSections.map((section, index) => (
+          <Block
+            id={featuredLinks.length || index ? `links-${section.id}` : 'links'}
+            key={section.id}
+            title={section.title}
+          >
+            {section.description ? (
+              <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
+                {section.description}
+              </p>
+            ) : null}
+            <PublicLinks layout={section.layout} links={section.links} />
+          </Block>
+        ))}
 
         {page.services.length ? (
           <Block id="services" title="What I do">
@@ -352,6 +373,71 @@ function Block({ id, title, children }: { id: string; title: string; children: R
       </h2>
       {children}
     </section>
+  );
+}
+
+function PublicLinks({
+  links,
+  layout = 'list',
+}: {
+  links: Array<{
+    id: string;
+    label: string;
+    url: string;
+    thumbnailAssetId: string | null;
+    platformKey: string | null;
+  }>;
+  layout?: 'list' | 'grid' | 'compact';
+}) {
+  return (
+    <ul
+      className={
+        layout === 'grid'
+          ? 'grid grid-cols-2 gap-2'
+          : layout === 'compact'
+            ? 'space-y-1'
+            : 'space-y-2'
+      }
+    >
+      {links.map((link) => (
+        <li key={link.id}>
+          <a
+            className={`flex items-center gap-3 border border-border/70 text-[14px] transition-all hover:-translate-y-0.5 hover:bg-accent/50 hover:shadow-sm ${layout === 'compact' ? 'rounded-lg p-2' : 'rounded-xl p-2.5'} ${layout === 'grid' ? 'flex-col items-start' : ''}`}
+            href={link.url}
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            {link.thumbnailAssetId ? (
+              <img
+                alt=""
+                className="size-11 shrink-0 rounded-lg object-cover"
+                src={`/assets/${link.thumbnailAssetId}`}
+              />
+            ) : (
+              <PublicLinkMark platformKey={link.platformKey} url={link.url} />
+            )}
+            <span className="min-w-0 flex-1 truncate font-medium">{link.label}</span>
+            <span aria-hidden="true" className="shrink-0 pr-1 text-muted-foreground">
+              ↗
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PublicLinkMark({ platformKey, url }: { platformKey: string | null; url: string }) {
+  const platform = getLinkPlatform(platformKey) ?? detectLinkPlatform(url);
+  if (!platform) return null;
+
+  return (
+    <span
+      className="grid size-11 shrink-0 place-items-center rounded-lg shadow-sm"
+      style={platformColors(platform)}
+    >
+      <PlatformIcon className="size-4" platform={platform} />
+    </span>
   );
 }
 

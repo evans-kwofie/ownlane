@@ -485,7 +485,18 @@ export type PublicProfile = {
   contact: { channel: ContactChannel; value: string }[];
   credibility: CredibilityEntry[];
   services: ServiceEntry[];
-  links: { id: string; label: string; url: string }[];
+  links: {
+    id: string;
+    label: string;
+    url: string;
+    thumbnailAssetId: string | null;
+    platformKey: string | null;
+    collectionId: string | null;
+    collectionTitle: string | null;
+    collectionDescription: string | null;
+    collectionLayout: 'list' | 'grid' | 'compact' | null;
+    collectionPosition: number | null;
+  }[];
 };
 
 /**
@@ -534,15 +545,34 @@ export async function readPublicProfile(
       .all<{ id: string; name: string; description: string | null; url: string | null }>(),
     db
       .prepare(
-        `SELECT id, label, url FROM profile_links
-         WHERE profile_id = ?1 AND is_active = 1
-           AND publication_status = 'live'
-            OR (profile_id = ?1 AND is_active = 1 AND publication_status = 'scheduled'
-                AND starts_at <= CURRENT_TIMESTAMP AND (ends_at IS NULL OR ends_at > CURRENT_TIMESTAMP))
-         ORDER BY position, created_at`,
+        `SELECT l.id, l.label, l.url, l.thumbnail_asset_id AS thumbnailAssetId,
+                l.platform_key AS platformKey,
+                l.collection_id AS collectionId, c.title AS collectionTitle,
+                c.description AS collectionDescription, c.layout AS collectionLayout,
+                c.position AS collectionPosition
+           FROM profile_links l
+           LEFT JOIN link_collections c ON c.id = l.collection_id
+          WHERE l.profile_id = ?1 AND l.is_active = 1
+            AND (l.collection_id IS NULL OR c.is_active = 1)
+            AND (l.publication_status = 'live'
+              OR (l.publication_status = 'scheduled' AND datetime(l.starts_at) <= CURRENT_TIMESTAMP
+                  AND (l.ends_at IS NULL OR datetime(l.ends_at) > CURRENT_TIMESTAMP)))
+          ORDER BY CASE WHEN l.collection_id IS NULL THEN 0 ELSE 1 END,
+                   c.position, l.position, l.created_at`,
       )
       .bind(profile.id)
-      .all<{ id: string; label: string; url: string }>(),
+      .all<{
+        id: string;
+        label: string;
+        url: string;
+        thumbnailAssetId: string | null;
+        platformKey: string | null;
+        collectionId: string | null;
+        collectionTitle: string | null;
+        collectionDescription: string | null;
+        collectionLayout: 'list' | 'grid' | 'compact' | null;
+        collectionPosition: number | null;
+      }>(),
   ]);
 
   const published = new Set((visibility.results ?? []).map((entry) => entry.channel));

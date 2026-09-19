@@ -1,30 +1,23 @@
-import { useEffect, useState } from 'react';
 import { getAuth } from '@clerk/react-router/server';
-import { Button } from '@ownlane/ui/components/button';
-import { Input } from '@ownlane/ui/components/input';
-import { Label } from '@ownlane/ui/components/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@ownlane/ui/components/dialog';
-import { toast } from '@ownlane/ui/components/sonner';
-import { data, Link, useFetcher } from 'react-router';
+import { data } from 'react-router';
 
-import { EmptyState } from '../../components/empty-state';
-import { PageHeader } from '../../components/page-header';
 import {
   createProfileLink,
+  deleteLinkCollection,
   deleteProfileLink,
-  moveProfileLink,
+  reorderLinkCollections,
+  reorderProfileLinks,
+  saveLinkCollection,
   updateProfileLink,
 } from '../../features/links/actions.server';
-import { listProfileLinks } from '../../features/links/queries.server';
-import { listLinkCollections } from '../../features/links/queries.server';
-import { linkSchema, type ProfileLink } from '../../features/links/schema';
+import { LinksWorkspace } from '../../components/features/links/links-workspace';
+import {
+  listConnectedAccountLinkSuggestions,
+  listLinkCollections,
+  listProfileLinks,
+} from '../../features/links/queries.server';
+import { linkFieldErrors, linkSchema } from '../../features/links/schema';
+import { listAssets, storeImage } from '../../lib/assets.server';
 import { cloudflare } from '../../lib/cloudflare';
 import { readProfile } from '../../lib/profiles.server';
 import { getWorkspaceForUser } from '../../lib/workspaces.server';
@@ -34,7 +27,7 @@ export function meta(_: Route.MetaArgs) {
   return [{ title: 'Links — Ownlane' }];
 }
 
-export async function loader(args: Route.LoaderArgs) {
+async function resolveContext(args: Route.LoaderArgs | Route.ActionArgs) {
   const { userId } = await getAuth(args);
   if (!userId) throw new Response('Unauthorized', { status: 401 });
   const { env } = args.context.get(cloudflare);
@@ -42,336 +35,139 @@ export async function loader(args: Route.LoaderArgs) {
   if (!workspace) throw new Response('Not found', { status: 404 });
   const profile = await readProfile(env.DB, workspace.id);
   if (!profile) throw new Response('Not found', { status: 404 });
-  const [links, collections] = await Promise.all([
+  return { env, workspace, profile };
+}
+
+export async function loader(args: Route.LoaderArgs) {
+  const { env, workspace, profile } = await resolveContext(args);
+  const [links, collections, assets, connections] = await Promise.all([
     listProfileLinks(env.DB, profile.id),
     listLinkCollections(env.DB, profile.id),
+    listAssets(env.DB, workspace.id),
+    listConnectedAccountLinkSuggestions(env.DB, profile.id),
   ]);
-  return { links, collections };
+  return { links, collections, assets, connections };
 }
 
 export async function action(args: Route.ActionArgs) {
-  const { userId } = await getAuth(args);
-  if (!userId) throw new Response('Unauthorized', { status: 401 });
-  const { env } = args.context.get(cloudflare);
-  const workspace = await getWorkspaceForUser(env.DB, userId, args.params.workspace);
-  if (!workspace) throw new Response('Not found', { status: 404 });
-  const profile = await readProfile(env.DB, workspace.id);
-  if (!profile) throw new Response('Not found', { status: 404 });
-
+  const { env, workspace, profile } = await resolveContext(args);
   const form = await args.request.formData();
   const intent = String(form.get('intent'));
-  const linkId = String(form.get('linkId') ?? '');
-  if (intent === 'create' || intent === 'update') {
-    const parsed = linkSchema.safeParse({ label: form.get('label'), url: form.get('url') });
-    if (!parsed.success) {
-      const errors = parsed.error.flatten().fieldErrors;
-      return data(
-        { fieldErrors: { label: errors.label?.[0], url: errors.url?.[0] } },
-        { status: 400 },
-      );
+  if (intent === 'save-link') {
+    const deleteId = String(form.get('deleteLinkId') ?? '');
+    if (deleteId)
+      return (await deleteProfileLink(env.DB, profile.id, deleteId))
+        ? { saved: 'Link deleted' }
+        : data({ error: 'That link no longer exists.' }, { status: 404 });
+    let thumbnailAssetId = String(form.get('thumbnailAssetId') ?? '') || null;
+    const file = form.get('thumbnail');
+    if (file instanceof File && file.size) {
+      const stored = await storeImage(env, { workspaceId: workspace.id, file, kind: 'image' });
+      if (stored.error || !stored.asset)
+        return data({ error: stored.error ?? 'Thumbnail upload failed.' }, { status: 400 });
+      thumbnailAssetId = stored.asset.id;
+    } else if (thumbnailAssetId) {
+      const asset = await env.DB.prepare(
+        "SELECT id FROM assets WHERE id = ?1 AND workspace_id = ?2 AND content_type LIKE 'image/%'",
+      )
+        .bind(thumbnailAssetId, workspace.id)
+        .first();
+      if (!asset)
+        return data({ error: 'That thumbnail is not in this asset library.' }, { status: 400 });
     }
-    if (intent === 'create') await createProfileLink(env.DB, profile.id, parsed.data);
-    else if (!linkId || !(await updateProfileLink(env.DB, profile.id, linkId, parsed.data)))
-      return data({ error: 'That link no longer exists.' }, { status: 404 });
-    return { saved: intent === 'create' ? 'Link added' : 'Link updated' };
+    const collectionId = String(form.get('collectionId') ?? '') || null;
+    if (collectionId) {
+      const collection = await env.DB.prepare(
+        'SELECT id FROM link_collections WHERE id = ?1 AND profile_id = ?2',
+      )
+        .bind(collectionId, profile.id)
+        .first();
+      if (!collection) return data({ error: 'That section no longer exists.' }, { status: 400 });
+    }
+    const connectedAccountId = String(form.get('connectedAccountId') ?? '') || null;
+    if (connectedAccountId) {
+      const account = await env.DB.prepare(
+        'SELECT id FROM connected_accounts WHERE id = ?1 AND profile_id = ?2',
+      )
+        .bind(connectedAccountId, profile.id)
+        .first();
+      if (!account)
+        return data({ error: 'That connected account is no longer available.' }, { status: 400 });
+    }
+    const parsed = linkSchema.safeParse({
+      label: form.get('label'),
+      url: form.get('url'),
+      publicationStatus: form.get('publicationStatus'),
+      startsAt: form.get('startsAt') || undefined,
+      endsAt: form.get('endsAt') || undefined,
+      thumbnailAssetId,
+      collectionId,
+      platformKey: String(form.get('platformKey') ?? '') || null,
+      connectedAccountId,
+    });
+    if (!parsed.success)
+      return data({ fieldErrors: linkFieldErrors(parsed.error) }, { status: 400 });
+    const linkId = String(form.get('linkId') ?? '');
+    if (linkId)
+      return (await updateProfileLink(env.DB, profile.id, linkId, parsed.data))
+        ? { saved: 'Link updated' }
+        : data({ error: 'That link no longer exists.' }, { status: 404 });
+    await createProfileLink(env.DB, profile.id, parsed.data);
+    return { saved: 'Link added' };
   }
-  if (intent === 'delete') {
-    if (!linkId || !(await deleteProfileLink(env.DB, profile.id, linkId)))
-      return data({ error: 'That link no longer exists.' }, { status: 404 });
-    return { saved: 'Link deleted' };
+  if (intent === 'save-collection') {
+    const deleteId = String(form.get('deleteCollectionId') ?? '');
+    if (deleteId)
+      return (await deleteLinkCollection(env.DB, profile.id, deleteId))
+        ? { saved: 'Section deleted; its links moved to Featured links' }
+        : data({ error: 'That section no longer exists.' }, { status: 404 });
+    const title = String(form.get('title') ?? '').trim();
+    if (!title || title.length > 80)
+      return data({ error: 'Use a section title between 1 and 80 characters.' }, { status: 400 });
+    const id = await saveLinkCollection(env.DB, profile.id, {
+      id: String(form.get('collectionId') ?? '') || undefined,
+      title,
+      description: String(form.get('description') ?? '')
+        .trim()
+        .slice(0, 180),
+      layout: ['list', 'grid', 'compact'].includes(String(form.get('layout')))
+        ? (String(form.get('layout')) as 'list' | 'grid' | 'compact')
+        : 'list',
+      isActive: form.get('isActive') === 'on',
+    });
+    return id
+      ? { saved: 'Section saved' }
+      : data({ error: 'That section no longer exists.' }, { status: 404 });
   }
-  if (intent === 'move') {
-    const direction = String(form.get('direction'));
-    if (
-      (direction !== 'up' && direction !== 'down') ||
-      !linkId ||
-      !(await moveProfileLink(env.DB, profile.id, linkId, direction))
-    )
-      return data({ error: 'That link cannot be moved.' }, { status: 400 });
-    return { saved: 'Link order updated' };
+  if (intent === 'reorder-links' || intent === 'reorder-collections') {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(String(form.get(intent === 'reorder-links' ? 'items' : 'ids') ?? '[]'));
+    } catch {
+      return data({ error: 'Invalid order.' }, { status: 400 });
+    }
+    if (!Array.isArray(payload)) return data({ error: 'Invalid order.' }, { status: 400 });
+    const saved =
+      intent === 'reorder-links'
+        ? await reorderProfileLinks(
+            env.DB,
+            profile.id,
+            payload.map((item) => ({
+              id: String((item as { id?: unknown }).id ?? ''),
+              collectionId: (() => {
+                const value = (item as { collectionId?: unknown }).collectionId;
+                return value === null || value === undefined || value === '' ? null : String(value);
+              })(),
+            })),
+          )
+        : await reorderLinkCollections(env.DB, profile.id, payload.map(String));
+    return saved
+      ? { saved: 'Order updated' }
+      : data({ error: 'The order could not be saved.' }, { status: 400 });
   }
   return data({ error: 'Unknown link action.' }, { status: 400 });
 }
 
-type MutationResult = { saved?: string; error?: string };
-
 export default function Links({ loaderData }: Route.ComponentProps) {
-  const [adding, setAdding] = useState(false);
-  const [deleting, setDeleting] = useState<ProfileLink>();
-  const mutation = useFetcher<MutationResult>();
-
-  useEffect(() => {
-    if (mutation.data?.saved) toast.success(mutation.data.saved);
-    if (mutation.data?.error) toast.error(mutation.data.error);
-  }, [mutation.data]);
-
-  useEffect(() => {
-    if (mutation.data?.saved === 'Link deleted') setDeleting(undefined);
-  }, [mutation.data]);
-
-  return (
-    <>
-      <PageHeader
-        action={
-          <div className="flex items-center gap-2">
-            <Button asChild className="h-9 text-[13px]" variant="outline">
-              <Link to="collections/new">Create collection</Link>
-            </Button>
-            <Button
-              className="h-9 gap-1.5 bg-foreground text-[13px] text-background hover:bg-foreground/90"
-              onClick={() => setAdding(true)}
-            >
-              Add link
-            </Button>
-          </div>
-        }
-        title="Links"
-        description="Organize the destinations on your profile into intentional collections."
-      />
-      <section className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {loaderData.collections.map((collection) => (
-          <Link
-            className="rounded-xl border border-border/70 bg-card p-5 transition-colors hover:bg-accent/40"
-            key={collection.id}
-            to={`collections/${collection.id}`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="font-medium">{collection.title}</p>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                {collection.isActive ? 'Visible' : 'Hidden'}
-              </span>
-            </div>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              {collection.linkCount} {collection.linkCount === 1 ? 'link' : 'links'}
-            </p>
-          </Link>
-        ))}
-      </section>
-      {loaderData.collections.length ? (
-        <p className="mb-3 text-[13px] font-medium text-muted-foreground">All links</p>
-      ) : null}
-      {loaderData.links.length ? (
-        <ol className="divide-y divide-border/70 overflow-hidden rounded-xl border border-border/70 bg-card">
-          {loaderData.links.map((link, index) => (
-            <li className="flex items-center gap-3 px-4 py-3 sm:px-5" key={link.id}>
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                {index + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium">{link.label}</p>
-                  <LinkStatus link={link} />
-                </div>
-                <a
-                  className="block truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
-                  href={link.url}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                >
-                  {link.url}
-                </a>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <MoveButton
-                  disabled={index === 0}
-                  direction="up"
-                  linkId={link.id}
-                  mutation={mutation}
-                />
-                <MoveButton
-                  disabled={index === loaderData.links.length - 1}
-                  direction="down"
-                  linkId={link.id}
-                  mutation={mutation}
-                />
-                <Button asChild size="sm" variant="ghost">
-                  <Link to={link.id}>Edit</Link>
-                </Button>
-                <Button onClick={() => setDeleting(link)} size="sm" type="button" variant="ghost">
-                  Delete
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <EmptyState
-          action={
-            <Button
-              className="h-9 gap-1.5 bg-foreground text-[13px] text-background hover:bg-foreground/90"
-              onClick={() => setAdding(true)}
-            >
-              Add your first link
-            </Button>
-          }
-          title="No links yet"
-          description="Add the places you want people to find first."
-        />
-      )}
-      <DeleteLinkDialog
-        link={deleting}
-        mutation={mutation}
-        onOpenChange={(open) => !open && setDeleting(undefined)}
-      />
-      <AddLinkDialog onOpenChange={setAdding} open={adding} />
-    </>
-  );
-}
-
-function AddLinkDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const fetcher = useFetcher<MutationResult>();
-  const pending = fetcher.state !== 'idle';
-  useEffect(() => {
-    if (fetcher.data?.saved) {
-      toast.success(fetcher.data.saved);
-      onOpenChange(false);
-    }
-  }, [fetcher.data, onOpenChange]);
-  return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add link</DialogTitle>
-          <DialogDescription>
-            Add a destination to your links page. You can refine it later in the editor.
-          </DialogDescription>
-        </DialogHeader>
-        <fetcher.Form className="space-y-4" method="post">
-          <input name="intent" type="hidden" value="create" />
-          <div className="space-y-2">
-            <Label htmlFor="quick-link-label">Label</Label>
-            <Input id="quick-link-label" name="label" placeholder="Portfolio" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="quick-link-url">URL</Label>
-            <Input
-              id="quick-link-url"
-              name="url"
-              placeholder="https://example.com"
-              required
-              type="url"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="quick-link-status">Publishing</Label>
-            <select
-              className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
-              defaultValue="live"
-              id="quick-link-status"
-              name="publicationStatus"
-            >
-              <option value="live">Live now</option>
-              <option value="draft">Save as draft</option>
-            </select>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
-              Cancel
-            </Button>
-            <Button disabled={pending} type="submit">
-              {pending ? 'Adding…' : 'Add link'}
-            </Button>
-          </DialogFooter>
-        </fetcher.Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function LinkStatus({ link }: { link: ProfileLink }) {
-  const ended =
-    link.publicationStatus === 'scheduled' && link.endsAt && new Date(link.endsAt) <= new Date();
-  const upcoming =
-    link.publicationStatus === 'scheduled' &&
-    (!link.startsAt || new Date(link.startsAt) > new Date());
-  const label = ended
-    ? 'Ended'
-    : upcoming
-      ? 'Scheduled'
-      : link.publicationStatus === 'live'
-        ? 'Live'
-        : link.publicationStatus === 'paused'
-          ? 'Paused'
-          : 'Draft';
-  return (
-    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-      {label}
-    </span>
-  );
-}
-
-function MoveButton({
-  direction,
-  linkId,
-  disabled,
-  mutation,
-}: {
-  direction: 'up' | 'down';
-  linkId: string;
-  disabled: boolean;
-  mutation: ReturnType<typeof useFetcher<MutationResult>>;
-}) {
-  return (
-    <mutation.Form method="post">
-      <input name="intent" type="hidden" value="move" />
-      <input name="linkId" type="hidden" value={linkId} />
-      <input name="direction" type="hidden" value={direction} />
-      <Button
-        aria-label={`Move ${direction}`}
-        disabled={disabled || mutation.state !== 'idle'}
-        size="sm"
-        type="submit"
-        variant="ghost"
-      >
-        {direction === 'up' ? '↑' : '↓'}
-      </Button>
-    </mutation.Form>
-  );
-}
-
-function DeleteLinkDialog({
-  link,
-  mutation,
-  onOpenChange,
-}: {
-  link?: ProfileLink;
-  mutation: ReturnType<typeof useFetcher<MutationResult>>;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const pending = mutation.state !== 'idle';
-  return (
-    <Dialog onOpenChange={onOpenChange} open={!!link}>
-      <DialogContent className="sm:max-w-[420px]">
-        <DialogHeader>
-          <DialogTitle>Delete {link?.label}?</DialogTitle>
-          <DialogDescription>
-            This removes this destination from your public profile. This cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            disabled={pending}
-            onClick={() => onOpenChange(false)}
-            type="button"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-          <mutation.Form method="post">
-            <input name="intent" type="hidden" value="delete" />
-            <input name="linkId" type="hidden" value={link?.id ?? ''} />
-            <Button disabled={pending} type="submit" variant="destructive">
-              {pending ? 'Deleting…' : 'Delete link'}
-            </Button>
-          </mutation.Form>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  return <LinksWorkspace {...loaderData} />;
 }

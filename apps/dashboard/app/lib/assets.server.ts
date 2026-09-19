@@ -88,7 +88,7 @@ export type AssetRecord = {
   originalName: string | null;
   createdAt: string;
   /** Where this asset is currently used, if anywhere. */
-  usedAs: 'avatar' | 'logo' | 'cover' | null;
+  usedAs: 'avatar' | 'logo' | 'cover' | 'link-thumbnail' | null;
 };
 
 /** Everything in a workspace's library, newest first, with its current use. */
@@ -102,6 +102,8 @@ export async function listAssets(db: D1Database, workspaceId: string): Promise<A
                 WHEN p.avatar_key = a.id THEN 'avatar'
                 WHEN p.logo_key = a.id THEN 'logo'
                 WHEN p.cover_key = a.id THEN 'cover'
+                WHEN EXISTS (SELECT 1 FROM profile_links l WHERE l.thumbnail_asset_id = a.id)
+                  THEN 'link-thumbnail'
                 ELSE NULL
               END AS usedAs
          FROM assets a
@@ -142,6 +144,12 @@ export async function deleteAsset(
               cover_key = CASE WHEN cover_key = ?1 THEN NULL ELSE cover_key END,
               updated_at = CURRENT_TIMESTAMP
         WHERE workspace_id = ?2`,
+    ).bind(assetId, workspaceId),
+    env.DB.prepare(
+      `UPDATE profile_links
+          SET thumbnail_asset_id = NULL, updated_at = CURRENT_TIMESTAMP
+        WHERE thumbnail_asset_id = ?1
+          AND profile_id IN (SELECT id FROM profiles WHERE workspace_id = ?2)`,
     ).bind(assetId, workspaceId),
     env.DB.prepare('DELETE FROM assets WHERE id = ?1 AND workspace_id = ?2').bind(
       assetId,

@@ -6,10 +6,34 @@ export const linkSchema = z.object({
   publicationStatus: z.enum(['draft', 'live', 'paused', 'scheduled']),
   startsAt: z.string().optional(),
   endsAt: z.string().optional(),
+  thumbnailAssetId: z.string().uuid().nullable().optional(),
+  collectionId: z.string().uuid().nullable().optional(),
+  platformKey: z.string().trim().max(64).nullable().optional(),
+  connectedAccountId: z.string().uuid().nullable().optional(),
 });
 
 export type LinkInput = z.infer<typeof linkSchema>;
 
-export type ProfileLink = LinkInput & { id: string; position: number; collectionId: string | null };
+/** Extracts the field messages used by the link forms from Zod's error tree. */
+export function linkFieldErrors(error: z.ZodError<LinkInput>) {
+  const tree = z.treeifyError(error);
+  return {
+    label: tree.properties?.label?.errors[0],
+    url: tree.properties?.url?.errors[0],
+  };
+}
 
-export type LinkCollection = { id: string; title: string; position: number; isActive: number; linkCount: number };
+export type ProfileLink = LinkInput & {
+  id: string;
+  position: number;
+};
+
+export type LinkCollection = {
+  id: string;
+  title: string;
+  description: string;
+  layout: 'list' | 'grid' | 'compact';
+  position: number;
+  isActive: number;
+  linkCount: number;
+};
