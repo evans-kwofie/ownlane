@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   server: {
-    allowedHosts: ['eyes-charging-intervals-specifications.trycloudflare.com'],
+    allowedHosts: ['und-cayman-counters-ellis.trycloudflare.com'],
   },
   plugins: [
     tailwindcss(),

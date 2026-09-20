@@ -22,6 +22,22 @@ type Pages = {
       "id": string;
     };
   };
+  "/events/profile/:slug/view": {
+    params: {
+      "slug": string;
+    };
+  };
+  "/events/profile/:slug/interaction": {
+    params: {
+      "slug": string;
+    };
+  };
+  "/r/:kind/:destinationId": {
+    params: {
+      "kind": string;
+      "destinationId": string;
+    };
+  };
   "/oauth/github/setup": {
     params: {};
   };
@@ -155,7 +171,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/continue" | "/assets/:id" | "/oauth/github/setup" | "/oauth/callback/github" | "/oauth/callback/twitch" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/connections/github/connect" | "/app/:workspace/connections/twitch/connect" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings" | "/:slug/contact.vcf" | "/:slug";
+    page: "/" | "/continue" | "/assets/:id" | "/events/profile/:slug/view" | "/events/profile/:slug/interaction" | "/r/:kind/:destinationId" | "/oauth/github/setup" | "/oauth/callback/github" | "/oauth/callback/twitch" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/connections/github/connect" | "/app/:workspace/connections/twitch/connect" | "/app/:workspace/content" | "/app/:workspace/activity" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/developer" | "/app/:workspace/settings" | "/:slug/contact.vcf" | "/:slug";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -168,6 +184,18 @@ type RouteFiles = {
   "routes/assets.tsx": {
     id: "routes/assets";
     page: "/assets/:id";
+  };
+  "routes/analytics-profile-view.tsx": {
+    id: "routes/analytics-profile-view";
+    page: "/events/profile/:slug/view";
+  };
+  "routes/analytics-profile-interaction.tsx": {
+    id: "routes/analytics-profile-interaction";
+    page: "/events/profile/:slug/interaction";
+  };
+  "routes/outbound-redirect.tsx": {
+    id: "routes/outbound-redirect";
+    page: "/r/:kind/:destinationId";
   };
   "routes/oauth.github.setup.tsx": {
     id: "routes/oauth.github.setup";
@@ -295,6 +323,9 @@ type RouteModules = {
   "routes/home": typeof import("./app/routes/home.tsx");
   "routes/continue": typeof import("./app/routes/continue.tsx");
   "routes/assets": typeof import("./app/routes/assets.tsx");
+  "routes/analytics-profile-view": typeof import("./app/routes/analytics-profile-view.tsx");
+  "routes/analytics-profile-interaction": typeof import("./app/routes/analytics-profile-interaction.tsx");
+  "routes/outbound-redirect": typeof import("./app/routes/outbound-redirect.tsx");
   "routes/oauth.github.setup": typeof import("./app/routes/oauth.github.setup.tsx");
   "routes/oauth.github.callback": typeof import("./app/routes/oauth.github.callback.tsx");
   "routes/oauth.twitch.callback": typeof import("./app/routes/oauth.twitch.callback.tsx");

@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ownlane/ui/components/dialog';
+import { trackProfileInteraction } from '../features/analytics/client';
 
 type ProfileActionsProps = {
   name: string;
@@ -37,6 +38,7 @@ export function ProfileActions({ name, slug, url, tagline }: ProfileActionsProps
     if (isTouch && navigator.share) {
       try {
         await navigator.share({ title: name, text: tagline, url });
+        trackProfileInteraction(slug, 'share');
       } catch {
         // Dismissed, which is an answer: do not then open a dialog over it.
       }
@@ -50,11 +52,17 @@ export function ProfileActions({ name, slug, url, tagline }: ProfileActionsProps
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
+      trackProfileInteraction(slug, 'copy_link');
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
     }
+  }
+
+  function showQr() {
+    trackProfileInteraction(slug, 'qr_open');
+    setShowingQr(true);
   }
 
   return (
@@ -63,7 +71,7 @@ export function ProfileActions({ name, slug, url, tagline }: ProfileActionsProps
         <Button
           aria-label="Show QR code"
           className="size-9 bg-background p-0"
-          onClick={() => setShowingQr(true)}
+          onClick={showQr}
           type="button"
           variant="outline"
         >
@@ -84,7 +92,11 @@ export function ProfileActions({ name, slug, url, tagline }: ProfileActionsProps
           asChild
           className="h-9 gap-1.5 bg-foreground text-[13px] text-background hover:bg-foreground/90"
         >
-          <a download href={`/${slug}/contact.vcf`}>
+          <a
+            download
+            href={`/${slug}/contact.vcf`}
+            onClick={() => trackProfileInteraction(slug, 'save_contact')}
+          >
             <HugeiconsIcon icon={Download04Icon} size={15} strokeWidth={1.5} />
             Save contact
           </a>
@@ -120,7 +132,7 @@ export function ProfileActions({ name, slug, url, tagline }: ProfileActionsProps
             className="h-9 text-[13.5px]"
             onClick={() => {
               setSharing(false);
-              setShowingQr(true);
+              showQr();
             }}
             type="button"
             variant="outline"

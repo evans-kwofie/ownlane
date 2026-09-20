@@ -3,8 +3,10 @@ import { OwnlaneMark } from '@ownlane/ui/components/ownlane-mark';
 import { toCapitalised } from '@ownlane/ui/lib/text';
 
 import { ProfileActions } from '../components/profile-actions';
+import { PublicProfileAnalytics } from '../components/public-profile-analytics';
 import { ProfileToc, type TocEntry } from '../components/profile-toc';
 import { listContentItems } from '../features/content/queries.server';
+import { trackProfileInteraction, type ProfileInteraction } from '../features/analytics/client';
 import {
   PlatformIcon,
   detectLinkPlatform,
@@ -92,6 +94,16 @@ function contactHref(channel: ContactChannel, value: string) {
   return `tel:${value.replace(/[^\d+]/g, '')}`;
 }
 
+function contactInteraction(channel: ContactChannel): ProfileInteraction {
+  const interactions: Record<ContactChannel, ProfileInteraction> = {
+    publicEmail: 'contact_email',
+    phone: 'contact_phone',
+    whatsapp: 'contact_whatsapp',
+    bookingUrl: 'contact_booking',
+  };
+  return interactions[channel];
+}
+
 function toList(value: string) {
   return value
     .split(',')
@@ -171,12 +183,15 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
       {/* Sharing a profile nobody else can open would only mislead, so these
           appear once it is published. */}
       {preview ? null : (
-        <ProfileActions
-          name={name}
-          slug={page.slug}
-          tagline={lead}
-          url={`${origin}/${page.slug}`}
-        />
+        <>
+          <PublicProfileAnalytics slug={page.slug} />
+          <ProfileActions
+            name={name}
+            slug={page.slug}
+            tagline={lead}
+            url={`${origin}/${page.slug}`}
+          />
+        </>
       )}
 
       <ProfileToc entries={toc} />
@@ -272,7 +287,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 <li key={item.id}>
                   <a
                     className="flex items-center gap-3 rounded-xl border border-border/70 p-2.5 text-[14px] transition-all hover:-translate-y-0.5 hover:bg-accent/50 hover:shadow-sm"
-                    href={item.url}
+                    href={`/r/content/${item.id}`}
                     rel="noreferrer noopener"
                     target="_blank"
                   >
@@ -365,6 +380,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                   }
                   href={contactHref(channel, value)}
                   key={channel}
+                  onClick={() => trackProfileInteraction(page.slug, contactInteraction(channel))}
                   rel="noreferrer noopener"
                 >
                   {fieldLabel(channel)}
@@ -374,6 +390,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 <a
                   className="rounded-lg border border-border px-3.5 py-2 text-[13.5px] transition-colors hover:bg-accent/60"
                   href={website}
+                  onClick={() => trackProfileInteraction(page.slug, 'website')}
                   rel="noreferrer noopener"
                   target="_blank"
                 >
@@ -443,7 +460,7 @@ function PublicLinks({
         <li key={link.id}>
           <a
             className={`flex items-center gap-3 border border-border/70 text-[14px] transition-all hover:-translate-y-0.5 hover:bg-accent/50 hover:shadow-sm ${layout === 'compact' ? 'rounded-lg p-2' : 'rounded-xl p-2.5'} ${layout === 'grid' ? 'flex-col items-start' : ''}`}
-            href={link.url}
+            href={`/r/link/${link.id}`}
             rel="noreferrer noopener"
             target="_blank"
           >

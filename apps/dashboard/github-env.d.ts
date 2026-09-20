@@ -4,6 +4,7 @@ interface Env {
   GITHUB_CLIENT_SECRET: string;
   TWITCH_CLIENT_ID: string;
   TWITCH_CLIENT_SECRET: string;
+  ANALYTICS_VISITOR_SALT: string;
 }
 
 declare namespace Cloudflare {
@@ -13,5 +14,6 @@ declare namespace Cloudflare {
     GITHUB_CLIENT_SECRET: string;
     TWITCH_CLIENT_ID: string;
     TWITCH_CLIENT_SECRET: string;
+    ANALYTICS_VISITOR_SALT: string;
   }
 }
