@@ -4,6 +4,7 @@ import { toCapitalised } from '@ownlane/ui/lib/text';
 
 import { ProfileActions } from '../components/profile-actions';
 import { ProfileToc, type TocEntry } from '../components/profile-toc';
+import { listContentItems } from '../features/content/queries.server';
 import {
   PlatformIcon,
   detectLinkPlatform,
@@ -49,16 +50,20 @@ export async function loader(args: Route.LoaderArgs) {
 
   const origin = env.PUBLIC_SITE_ORIGIN?.trim() || new URL(args.request.url).origin;
 
+  let preview = false;
   if (page.visibility !== 'public') {
     const { userId } = await getAuth(args);
     const allowed = await canPreview(env.DB, page.workspaceId, userId ?? null);
 
     if (!allowed) throw new Response('Not found', { status: 404 });
-
-    return { page, origin, preview: true };
+    preview = true;
   }
 
-  return { page, origin, preview: false };
+  const featuredContent = (await listContentItems(env.DB, page.profile.id)).filter(
+    (item) => item.isFeatured,
+  );
+
+  return { page, origin, preview, featuredContent };
 }
 
 /** A choice field reads as its label; everything else as its value. */
@@ -95,7 +100,7 @@ function toList(value: string) {
 }
 
 export default function PublicProfile({ loaderData }: Route.ComponentProps) {
-  const { page, origin, preview } = loaderData;
+  const { page, origin, preview, featuredContent } = loaderData;
   const { profile } = page;
 
   /** Public slots are filled from the manifest, so a described field appears
@@ -148,6 +153,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
     body ? { id: 'about', label: 'About' } : null,
     ...chips.map((entry) => ({ id: entry.field, label: entry.spec.label })),
     page.links.length ? { id: 'links', label: 'Links' } : null,
+    featuredContent.length ? { id: 'work', label: 'Work' } : null,
     page.services.length ? { id: 'services', label: 'What I do' } : null,
     page.credibility.length ? { id: 'proof', label: 'Proof' } : null,
     facts.length || place ? { id: 'particulars', label: 'Particulars' } : null,
@@ -258,6 +264,40 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
             <PublicLinks layout={section.layout} links={section.links} />
           </Block>
         ))}
+
+        {featuredContent.length ? (
+          <Block id="work" title="Featured work">
+            <ul className="space-y-2">
+              {featuredContent.map((item) => (
+                <li key={item.id}>
+                  <a
+                    className="flex items-center gap-3 rounded-xl border border-border/70 p-2.5 text-[14px] transition-all hover:-translate-y-0.5 hover:bg-accent/50 hover:shadow-sm"
+                    href={item.url}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                  >
+                    {item.kind === 'video' && item.imageUrl ? (
+                      <img
+                        alt=""
+                        className="size-11 shrink-0 rounded-lg object-cover"
+                        src={item.imageUrl}
+                      />
+                    ) : null}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{item.title}</span>
+                      <span className="mt-0.5 block truncate text-[12px] text-muted-foreground">
+                        {item.provider} · {item.kind}
+                      </span>
+                    </span>
+                    <span aria-hidden="true" className="shrink-0 pr-1 text-muted-foreground">
+                      ↗
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </Block>
+        ) : null}
 
         {page.services.length ? (
           <Block id="services" title="What I do">

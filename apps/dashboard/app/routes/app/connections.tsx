@@ -9,7 +9,15 @@ import {
   updateConnectionPreferences,
 } from '../../features/connections/actions.server';
 import { listConnectedAccounts } from '../../features/connections/queries.server';
+import {
+  githubIsConfigured,
+  revokeGitHubConnection,
+  syncGitHubProfile,
+} from '../../features/connections/github.server';
+import { revokeTwitchConnection, syncTwitchProfile, twitchIsConfigured } from '../../features/connections/twitch.server';
 import { connectionPreferencesSchema } from '../../features/connections/schema';
+import { createProfileLink } from '../../features/links/actions.server';
+import { getLinkPlatform, normalizeProvider, platformUrl } from '../../features/links/platforms';
 import { cloudflare } from '../../lib/cloudflare';
 import { readProfile } from '../../lib/profiles.server';
 import { getWorkspaceForUser } from '../../lib/workspaces.server';
@@ -34,8 +42,7 @@ export async function loader(args: Route.LoaderArgs) {
   const { env, profile } = await resolveContext(args);
   return {
     accounts: await listConnectedAccounts(env.DB, profile.id),
-    // Providers are enabled only after a real OAuth adapter and credentials exist.
-    enabledProviders: [] as string[],
+    enabledProviders: [githubIsConfigured(env) ? 'github' : null, twitchIsConfigured(env) ? 'twitch' : null].filter((provider): provider is string => Boolean(provider)),
   };
 }
 
@@ -61,6 +68,14 @@ export async function action(args: Route.ActionArgs) {
   }
 
   if (intent === 'disconnect') {
+    const provider = await env.DB.prepare('SELECT provider FROM connected_accounts WHERE id=?1 AND profile_id=?2').bind(accountId, profile.id).first<{provider:string}>();
+    const revoked = provider?.provider === 'twitch' ? await revokeTwitchConnection(env, profile.id, accountId) : await revokeGitHubConnection(env, profile.id, accountId);
+    if (!revoked) {
+      return data(
+        { error: 'GitHub could not be disconnected. Please try again.' },
+        { status: 502 },
+      );
+    }
     const disconnected = await disconnectAccount(env.DB, profile.id, accountId);
     return disconnected
       ? { message: 'Account disconnected' }
@@ -79,6 +94,60 @@ export async function action(args: Route.ActionArgs) {
     return cleared
       ? { message: 'Connection error dismissed' }
       : data({ error: 'That connection no longer exists.' }, { status: 404 });
+  }
+
+  if (intent === 'add-public-link') {
+    const account = await env.DB.prepare(
+      `SELECT provider, provider_handle AS handle, display_name AS displayName
+         FROM connected_accounts
+        WHERE id = ?1 AND profile_id = ?2 AND connection_status = 'connected'`,
+    )
+      .bind(accountId, profile.id)
+      .first<{ provider: string; handle: string | null; displayName: string | null }>();
+    if (!account)
+      return data({ error: 'That connected account is no longer available.' }, { status: 404 });
+
+    const existing = await env.DB.prepare(
+      'SELECT id FROM profile_links WHERE profile_id = ?1 AND connected_account_id = ?2 AND is_active = 1',
+    )
+      .bind(profile.id, accountId)
+      .first();
+    if (existing) return { message: 'This account is already included in your public links' };
+
+    const platformKey = normalizeProvider(account.provider);
+    const platform = getLinkPlatform(platformKey);
+    if (!platform || !account.handle)
+      return data(
+        { error: 'This connection does not have a public profile address to add yet.' },
+        { status: 400 },
+      );
+
+    await createProfileLink(env.DB, profile.id, {
+      label: platform.name,
+      url: platformUrl(platform, account.handle),
+      publicationStatus: 'live',
+      platformKey: platform.id,
+      connectedAccountId: accountId,
+    });
+    return { message: `${platform.name} added to your public links` };
+  }
+
+  if (intent === 'sync-github-profile') {
+    try {
+      const fields = await syncGitHubProfile(env, { accountId, profile });
+      return { message: `GitHub updated: ${fields.length} ${fields.length === 1 ? 'field' : 'fields'}` };
+    } catch (error) {
+      console.error('GitHub profile sync failed', error);
+      return data(
+        { error: error instanceof Error ? error.message : 'GitHub profile sync failed.' },
+        { status: 502 },
+      );
+    }
+  }
+
+  if (intent === 'sync-twitch-profile') {
+    try { await syncTwitchProfile(env, { accountId, profile }); return { message: 'Twitch channel description updated' }; }
+    catch (error) { console.error('Twitch profile sync failed', error); return data({ error: error instanceof Error ? error.message : 'Twitch profile sync failed.' }, { status: 502 }); }
   }
 
   return data({ error: 'Unknown connection action.' }, { status: 400 });

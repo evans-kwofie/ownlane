@@ -6,6 +6,7 @@ import {
   type ConnectedAccount,
   type ConnectionCapability,
 } from './schema';
+import { GITHUB_CAPABILITIES } from './github.server';
 
 const FIELD_LABELS: Record<string, string> = {
   displayName: 'Display name',
@@ -132,7 +133,10 @@ export async function listConnectedAccounts(
       selectedFields: Array.isArray(preferenceRecord.fields)
         ? preferenceRecord.fields.filter((field): field is string => typeof field === 'string')
         : [],
-      capabilities: parseCapabilities(row.capabilitiesJson),
+      capabilities:
+        row.provider === 'github'
+          ? GITHUB_CAPABILITIES.map((capability) => ({ ...capability }))
+          : parseCapabilities(row.capabilitiesJson),
       scopes: (Array.isArray(parsedScopes) ? parsedScopes : []).filter(
         (scope: unknown): scope is string => typeof scope === 'string',
       ),

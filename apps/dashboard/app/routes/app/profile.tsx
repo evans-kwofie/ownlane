@@ -401,6 +401,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
         {textRow('pronunciation', 'Pronunciation', { placeholder: 'EV-anz KWOH-fee' })}
         {textRow('pronouns', 'Pronouns', { placeholder: 'they/them' })}
         {textRow('profession', 'Profession', { placeholder: 'Design engineer and founder' })}
+        {textRow('company', 'Company', { placeholder: 'Ownlane' })}
         <ChoiceRow
           dirty={dirtyFields.includes('creatorType')}
           label="Identity type"

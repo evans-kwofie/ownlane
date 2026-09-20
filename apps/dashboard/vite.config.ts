@@ -4,6 +4,9 @@ import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  server: {
+    allowedHosts: ['eyes-charging-intervals-specifications.trycloudflare.com'],
+  },
   plugins: [
     tailwindcss(),
     // The Worker entry and the React Router server build must share one

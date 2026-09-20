@@ -4,6 +4,9 @@ export default [
   index('routes/home.tsx'),
   route('continue', 'routes/continue.tsx'),
   route('assets/:id', 'routes/assets.tsx'),
+  route('oauth/github/setup', 'routes/oauth.github.setup.tsx'),
+  route('oauth/callback/github', 'routes/oauth.github.callback.tsx'),
+  route('oauth/callback/twitch', 'routes/oauth.twitch.callback.tsx'),
 
   route('app', 'routes/app/layout.tsx', [
     // No workspace named: resolve one and redirect.
@@ -30,6 +33,8 @@ export default [
       route('links/collections/:collectionId', 'routes/app/collection-editor.tsx'),
       route('connections', 'routes/app/connections.tsx'),
       route('connections/new', 'routes/app/connection-catalog.tsx'),
+      route('connections/github/connect', 'routes/app/connect-github.tsx'),
+      route('connections/twitch/connect', 'routes/app/connect-twitch.tsx'),
       route('content', 'routes/app/content.tsx'),
 
       // Insight

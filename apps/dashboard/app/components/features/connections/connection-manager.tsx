@@ -12,12 +12,11 @@ import {
 } from '@ownlane/ui/components/dialog';
 import { FormSheet } from '@ownlane/ui/components/form-sheet';
 import { Label } from '@ownlane/ui/components/label';
-import { Link, type useFetcher } from 'react-router';
+import { type useFetcher } from 'react-router';
 
 import { getConnectionProvider } from '../../../features/connections/providers';
 import type { ConnectedAccount, CapabilityAccess } from '../../../features/connections/schema';
 import { PlatformIcon, getLinkPlatform, platformColors } from '../../../features/links/platforms';
-import { useWorkspacePath } from '../../../lib/workspaces';
 
 type Result = { message?: string; error?: string };
 
@@ -32,7 +31,6 @@ export function ConnectionManager({
   mutation: ReturnType<typeof useFetcher<Result>>;
   onOpenChange: (open: boolean) => void;
 }) {
-  const workspacePath = useWorkspacePath();
   const provider = account ? getConnectionProvider(account.provider) : undefined;
   const platform = account ? getLinkPlatform(provider?.iconKey ?? account.provider) : undefined;
   const adapterAvailable = account ? enabledProviders.includes(account.provider) : false;
@@ -66,7 +64,8 @@ export function ConnectionManager({
       }
       onOpenChange={onOpenChange}
       open={!!account}
-      size="wide"
+      side="right"
+      size="extra-wide"
       title={provider?.name ?? account?.provider ?? 'Connection'}
     >
       {account ? (
@@ -161,10 +160,16 @@ export function ConnectionManager({
                   Link presentation, thumbnails and visibility are managed separately.
                 </p>
               </div>
-              <Button asChild className="shrink-0" size="sm" variant="outline">
-                <Link to={workspacePath('/links')}>
-                  {account.publicLinkCount ? 'Manage links' : 'Add link'}
-                </Link>
+              <Button
+                className="shrink-0"
+                disabled={mutation.state !== 'idle' || Boolean(account.publicLinkCount)}
+                name="intent"
+                size="sm"
+                type="submit"
+                value="add-public-link"
+                variant="outline"
+              >
+                {account.publicLinkCount ? 'Added to links' : 'Add link'}
               </Button>
             </div>
           </section>
@@ -208,28 +213,46 @@ export function ConnectionManager({
                 </span>
               </label>
               {writableFields.length ? (
-                <fieldset>
-                  <legend className="mb-2 text-sm font-medium">Fields allowed to sync</legend>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {writableFields.map((capability) => (
-                      <label
-                        className="flex items-center gap-2.5 rounded-lg border border-border/70 px-3 py-2.5 text-sm"
-                        key={capability.field}
-                      >
-                        <input
-                          defaultChecked={
-                            !account.selectedFields.length ||
-                            account.selectedFields.includes(capability.field)
-                          }
-                          name="fields"
-                          type="checkbox"
-                          value={capability.field}
-                        />
-                        {capability.label}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
+                <>
+                  <fieldset>
+                    <legend className="mb-2 text-sm font-medium">Fields allowed to sync</legend>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {writableFields.map((capability) => (
+                        <label
+                          className="flex items-center gap-2.5 rounded-lg border border-border/70 px-3 py-2.5 text-sm"
+                          key={capability.field}
+                        >
+                          <input
+                            defaultChecked={
+                              !account.selectedFields.length ||
+                              account.selectedFields.includes(capability.field)
+                            }
+                            name="fields"
+                            type="checkbox"
+                            value={capability.field}
+                          />
+                          {capability.label}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  {account.provider === 'github' ? (
+                    <Button
+                      disabled={mutation.state !== 'idle'}
+                      name="intent"
+                      size="sm"
+                      type="submit"
+                      value="sync-github-profile"
+                    >
+                      {mutation.state === 'idle' ? 'Sync to GitHub now' : 'Syncing…'}
+                    </Button>
+                  ) : null}
+                  {account.provider === 'twitch' ? (
+                    <Button disabled={mutation.state !== 'idle'} name="intent" size="sm" type="submit" value="sync-twitch-profile">
+                      {mutation.state === 'idle' ? 'Sync to Twitch now' : 'Syncing…'}
+                    </Button>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </section>

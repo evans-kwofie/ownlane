@@ -3,7 +3,7 @@ import { ArrowLeft, Check, LockKeyhole, Search } from 'lucide-react';
 import { Badge } from '@ownlane/ui/components/badge';
 import { Button } from '@ownlane/ui/components/button';
 import { Input } from '@ownlane/ui/components/input';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
 import { PageHeader } from '../../page-header';
 import {
@@ -14,11 +14,19 @@ import {
 import { PlatformIcon, getLinkPlatform, platformColors } from '../../../features/links/platforms';
 import { useWorkspacePath } from '../../../lib/workspaces';
 
-export function ConnectionPlatformBrowser({ enabledProviders }: { enabledProviders: string[] }) {
+export function ConnectionPlatformBrowser({
+  enabledProviders,
+  connectedProviders,
+}: {
+  enabledProviders: string[];
+  connectedProviders: string[];
+}) {
   const workspacePath = useWorkspacePath();
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<ConnectionProviderCategory | 'All'>('All');
   const enabled = useMemo(() => new Set(enabledProviders), [enabledProviders]);
+  const connected = useMemo(() => new Set(connectedProviders), [connectedProviders]);
   const providers = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return CONNECTION_PROVIDERS.filter(
@@ -61,6 +69,13 @@ export function ConnectionPlatformBrowser({ enabledProviders }: { enabledProvide
         separately in Links.
       </div>
 
+      {searchParams.has('oauth_error') ? (
+        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          The platform could not be connected. Please try again. If this continues, confirm that
+          the OAuth callback URL matches this deployment.
+        </div>
+      ) : null}
+
       <div className="sticky top-16 z-10 mt-5 space-y-3 border-b border-border/70 bg-background/95 pb-4 backdrop-blur">
         <div className="relative max-w-xl">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -92,6 +107,7 @@ export function ConnectionPlatformBrowser({ enabledProviders }: { enabledProvide
         {providers.map((provider) => {
           const platform = getLinkPlatform(provider.iconKey);
           const available = enabled.has(provider.id);
+          const alreadyConnected = connected.has(provider.id);
           return (
             <article
               className="flex min-h-48 flex-col rounded-xl border border-border/70 bg-card p-5"
@@ -105,7 +121,11 @@ export function ConnectionPlatformBrowser({ enabledProviders }: { enabledProvide
                   <PlatformIcon className="size-5" platform={platform} />
                 </span>
                 <Badge variant="outline">
-                  {available ? (
+                  {alreadyConnected ? (
+                    <>
+                      <Check className="size-3" /> Connected
+                    </>
+                  ) : available ? (
                     <>
                       <Check className="size-3" /> Available
                     </>
@@ -124,8 +144,10 @@ export function ConnectionPlatformBrowser({ enabledProviders }: { enabledProvide
               </div>
               <div className="mt-5 border-t border-border/70 pt-3">
                 {available ? (
-                  <Button className="w-full" disabled>
-                    Connect
+                  <Button asChild className="w-full">
+                    <Link to={workspacePath(`/connections/${provider.id}/connect`)}>
+                      {alreadyConnected ? 'Connect another account' : 'Connect'}
+                    </Link>
                   </Button>
                 ) : (
                   <p className="text-xs text-muted-foreground">

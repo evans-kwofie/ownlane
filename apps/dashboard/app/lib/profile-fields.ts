@@ -48,6 +48,13 @@ export const PROFILE_FIELDS: Record<ProfileField, FieldSpec> = {
   pronunciation: { label: 'Pronunciation', group: 'identity', placeholder: 'EV-anz KWOH-fee', public: 'identity', order: 3 },
   pronouns: { label: 'Pronouns', group: 'identity', placeholder: 'they/them', public: 'identity', order: 1 },
   profession: { label: 'Profession', group: 'identity', placeholder: 'Design engineer and founder', public: 'identity', order: 0 },
+  company: {
+    label: 'Company',
+    group: 'identity',
+    placeholder: 'Ownlane',
+    hint: 'Used for connected profiles such as GitHub.',
+    public: 'none',
+  },
   creatorType: {
     label: 'Identity type',
     group: 'identity',

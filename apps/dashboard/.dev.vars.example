@@ -1,5 +1,8 @@
 # Local-only values. Copy this file to .dev.vars; never commit the copy.
 # Provider credentials will be added only when individual OAuth integrations ship.
+GITHUB_APP_SLUG=your-github-app-slug
+GITHUB_CLIENT_ID=your-github-app-client-id
+GITHUB_CLIENT_SECRET=your-github-app-client-secret
 OWNLANE_TOKEN_ENCRYPTION_KEY=replace-with-a-32-byte-base64-key
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_with_your_clerk_key
 CLERK_SECRET_KEY=sk_test_replace_with_your_clerk_secret

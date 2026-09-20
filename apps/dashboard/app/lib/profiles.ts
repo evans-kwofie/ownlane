@@ -11,6 +11,7 @@ export const PROFILE_LIMITS = {
   pronunciation: 60,
   pronouns: 30,
   profession: 80,
+  company: 120,
   shortBio: 160,
   mediumBio: 400,
   longBio: 2000,

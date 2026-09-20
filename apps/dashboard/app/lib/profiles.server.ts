@@ -24,6 +24,7 @@ const COLUMNS: Record<ProfileField, string> = {
   pronunciation: 'pronunciation',
   pronouns: 'pronouns',
   profession: 'profession',
+  company: 'company',
   shortBio: 'short_bio',
   mediumBio: 'medium_bio',
   longBio: 'long_bio',

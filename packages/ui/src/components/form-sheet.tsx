@@ -1,5 +1,7 @@
 import * as React from 'react';
+import { XIcon } from 'lucide-react';
 
+import { Button } from '@ownlane/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +12,7 @@ import {
 } from '@ownlane/ui/components/dialog';
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -30,6 +33,7 @@ export function FormSheet({
   footer,
   children,
   size = 'default',
+  side,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,8 +43,53 @@ export function FormSheet({
   children: React.ReactNode;
   /** 'wide' suits lists and timelines; forms stay at the default width. */
   size?: 'default' | 'wide' | 'extra-wide';
+  /** Use a persistent-height right-side surface for detailed management views. */
+  side?: 'right';
 }) {
   const isSmallScreen = useIsSmallScreen();
+
+  if (side === 'right') {
+    const width =
+      size === 'extra-wide'
+        ? 'sm:min-w-[760px]'
+        : size === 'wide'
+          ? 'sm:min-w-[580px]'
+          : 'sm:min-w-[460px]';
+
+    return (
+      <Drawer direction="right" onOpenChange={onOpenChange} open={open}>
+        <DrawerContent className={`w-full max-w-[calc(100%-2rem)] ${width}`}>
+          <DrawerHeader className="shrink-0 border-b border-border text-left">
+            <DrawerTitle className="pr-10 text-[17px] font-medium tracking-[-0.01em] break-words">
+              {title}
+            </DrawerTitle>
+            {description ? (
+              <DrawerDescription className="pr-6 text-[13.5px] leading-relaxed">
+                {description}
+              </DrawerDescription>
+            ) : null}
+            <DrawerClose asChild>
+              <Button
+                aria-label="Close"
+                className="absolute top-3 right-3"
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <XIcon />
+              </Button>
+            </DrawerClose>
+          </DrawerHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5">{children}</div>
+          {footer ? (
+            <DrawerFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border">
+              {footer}
+            </DrawerFooter>
+          ) : null}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   // Default to the dialog: a server render has no viewport, and switching to
   // the drawer after hydration is cheaper than mounting the wrong surface.

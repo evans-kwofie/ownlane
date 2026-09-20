@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@ownlane/ui/components/button';
 import { toast } from '@ownlane/ui/components/sonner';
-import { Link, useFetcher } from 'react-router';
+import { Link, useFetcher, useSearchParams } from 'react-router';
 
 import { PageHeader } from '../../page-header';
 import { getConnectionProvider } from '../../../features/connections/providers';
@@ -29,7 +29,10 @@ export function ConnectionsWorkspace({
   accounts: ConnectedAccount[];
   enabledProviders: string[];
 }) {
+  console.log('connected accounts', accounts);
+  console.log('enabled providers', enabledProviders);
   const workspacePath = useWorkspacePath();
+  const [searchParams, setSearchParams] = useSearchParams();
   const mutation = useFetcher<Result>();
   const [managedId, setManagedId] = useState<string>();
   const managed = accounts.find((account) => account.id === managedId);
@@ -49,15 +52,25 @@ export function ConnectionsWorkspace({
     if (mutation.data?.error) toast.error(mutation.data.error);
   }, [mutation.data]);
 
+  useEffect(() => {
+    if (searchParams.get('connected') !== 'github') return;
+    toast.success('GitHub connected');
+    const next = new URLSearchParams(searchParams);
+    next.delete('connected');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   return (
     <>
       <PageHeader
         action={
-          <Button asChild>
-            <Link to={workspacePath('/connections/new')}>
-              <Plus className="size-4" /> Connect platform
-            </Link>
-          </Button>
+          accounts?.length > 0 && (
+            <Button asChild>
+              <Link to={workspacePath('/connections/new')}>
+                <Plus className="size-4" /> Connect platform
+              </Link>
+            </Button>
+          )
         }
         description="Authorize the platforms Ownlane can read from, update and keep aligned with this identity."
         title="Connections"
