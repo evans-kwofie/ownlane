@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Activity01Icon,
   Analytics01Icon,
   DashboardSquare01Icon,
   Globe02Icon,
@@ -38,10 +37,9 @@ const DESTINATIONS: { to: string; label: string; icon: IconSvgElement }[] = [
   { to: '/links', label: 'Links', icon: Link01Icon },
   { to: '/connections', label: 'Connections', icon: PlugSocketIcon },
   { to: '/content', label: 'Content', icon: News01Icon },
-  { to: '/activity', label: 'Activity', icon: Activity01Icon },
   { to: '/health', label: 'Identity health', icon: HeartCheckIcon },
-  { to: '/analytics', label: 'Analytics', icon: Analytics01Icon },
   { to: '/audience', label: 'Audience', icon: UserGroupIcon },
+  { to: '/analytics', label: 'Analytics', icon: Analytics01Icon },
   { to: '/developer', label: 'Developer', icon: SourceCodeIcon },
   { to: '/settings', label: 'Workspace settings', icon: Settings01Icon },
 ];

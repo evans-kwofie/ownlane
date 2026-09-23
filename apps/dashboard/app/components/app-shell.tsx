@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { cn } from '@ownlane/ui/lib/utils';
 import {
-  Activity01Icon,
   Analytics01Icon,
   Cancel01Icon,
   DashboardSquare01Icon,
@@ -50,10 +49,9 @@ const NAV: NavGroup[] = [
   {
     label: 'Insight',
     items: [
-      { to: '/activity', label: 'Activity', icon: Activity01Icon },
       { to: '/health', label: 'Identity health', icon: HeartCheckIcon },
-      { to: '/analytics', label: 'Analytics', icon: Analytics01Icon },
       { to: '/audience', label: 'Audience', icon: UserGroupIcon },
+      { to: '/analytics', label: 'Analytics', icon: Analytics01Icon },
     ],
   },
   {

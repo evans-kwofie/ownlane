@@ -2,7 +2,8 @@ import { createClerkClient, getAuth } from '@clerk/react-router/server';
 import { Outlet, redirect } from 'react-router';
 
 import { cloudflare } from '../../lib/cloudflare';
-import { ensureWorkspaces, toSlug } from '../../lib/workspaces.server';
+import { ensureWorkspaces } from '../../lib/workspaces.server';
+import { toSlug } from '../../lib/workspaces';
 import type { Route } from './+types/layout';
 
 /**

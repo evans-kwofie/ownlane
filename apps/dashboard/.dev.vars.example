@@ -10,3 +10,16 @@ VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_with_your_clerk_key
 CLERK_SECRET_KEY=sk_test_replace_with_your_clerk_secret
 # Leave empty in development so "View site" points at this dev server.
 PUBLIC_SITE_ORIGIN=
+
+# Only secrets belong in this file. The public halves — VITE_TURNSTILE_SITE_KEY,
+# VITE_VAPID_PUBLIC_KEY and VAPID_SUBJECT — are declared in wrangler.jsonc vars,
+# which apply in development too. Set one here only to override it locally.
+
+# Cloudflare Turnstile, protecting the public contact form. Leave unset locally:
+# verification passes when the secret is absent so the form works in development.
+TURNSTILE_SECRET_KEY=
+
+# Web Push. Generate the pair with:
+#   node apps/dashboard/scripts/generate-vapid-keys.mjs
+# Push is never sent while this is unset.
+VAPID_PRIVATE_KEY=

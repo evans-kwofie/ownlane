@@ -19,7 +19,6 @@ import { useActiveWorkspace, usePublicSiteOrigin, useWorkspacePath } from '../li
 
 /** Stable names for the breadcrumb, independent of what a page calls itself. */
 const PAGE_NAMES: Record<string, string> = {
-  activity: 'Activity',
   analytics: 'Analytics',
   assets: 'Assets',
   audience: 'Audience',

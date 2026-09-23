@@ -1,4 +1,4 @@
-import type { Workspace } from './workspaces';
+import { toSlug, type Workspace } from './workspaces';
 
 /**
  * Workspace reads and writes. D1 has no interactive transactions, so anything
@@ -41,18 +41,21 @@ export async function listWorkspaces(db: D1Database, userId: string): Promise<Wo
 }
 
 /** A URL-safe slug. Uniqueness is enforced by the database, not by this. */
-export function toSlug(value: string) {
-  return (
-    value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 48) || 'me'
-  );
-}
-
-async function slugTaken(db: D1Database, slug: string) {
-  const row = await db.prepare('SELECT 1 FROM workspaces WHERE slug = ?1').bind(slug).first();
+/**
+ * A slug is taken if any workspace uses it now, or if any workspace used to.
+ * Releasing a retired address for reuse would silently redirect somebody's old
+ * links into a stranger's workspace.
+ */
+async function slugTaken(db: D1Database, slug: string, exceptWorkspaceId?: string) {
+  const row = await db
+    .prepare(
+      `SELECT 1 FROM workspaces WHERE slug = ?1 AND (?2 IS NULL OR id <> ?2)
+       UNION ALL
+       SELECT 1 FROM workspace_slug_history
+        WHERE slug = ?1 AND (?2 IS NULL OR workspace_id <> ?2)`,
+    )
+    .bind(slug, exceptWorkspaceId ?? null)
+    .first();
   return row !== null;
 }
 
@@ -139,6 +142,94 @@ export async function getWorkspaceForUser(
 
   return row ? toWorkspace(row) : null;
 }
+
+/**
+ * The workspace a retired slug used to name, if the person can still reach it.
+ * Callers redirect to its current address rather than rendering here, so an old
+ * link resolves once and then stops being old.
+ */
+export async function resolveRetiredSlug(db: D1Database, userId: string, slug: string) {
+  const row = await db
+    .prepare(
+      `SELECT w.slug
+         FROM workspace_slug_history h
+         JOIN workspaces w ON w.id = h.workspace_id
+         JOIN workspace_members m ON m.workspace_id = w.id
+        WHERE h.slug = ?1 AND m.user_id = ?2`,
+    )
+    .bind(slug, userId)
+    .first<{ slug: string }>();
+  return row?.slug ?? null;
+}
+
+export type RenameResult =
+  { ok: true; slug: string } | { ok: false; field: 'name' | 'slug'; error: string };
+
+/** Renames a workspace, keeping its old address working. */
+export async function renameWorkspace(
+  db: D1Database,
+  workspaceId: string,
+  input: { name: string; slug: string },
+): Promise<RenameResult> {
+  const name = input.name.trim();
+  if (!name) return { ok: false, field: 'name', error: 'Give this workspace a name.' };
+  if (name.length > 60)
+    return { ok: false, field: 'name', error: 'Keep the name under 60 characters.' };
+
+  const slug = toSlug(input.slug);
+  if (!slug || slug.length < 2) {
+    return { ok: false, field: 'slug', error: 'An address needs at least two characters.' };
+  }
+  if (RESERVED_SLUGS.has(slug)) {
+    return { ok: false, field: 'slug', error: 'That address is reserved.' };
+  }
+
+  const current = await db
+    .prepare('SELECT slug FROM workspaces WHERE id = ?1')
+    .bind(workspaceId)
+    .first<{ slug: string }>();
+  if (!current) return { ok: false, field: 'name', error: 'That workspace no longer exists.' };
+
+  if (slug !== current.slug && (await slugTaken(db, slug, workspaceId))) {
+    return { ok: false, field: 'slug', error: 'That address is already in use.' };
+  }
+
+  const statements = [
+    db
+      .prepare(
+        'UPDATE workspaces SET name = ?2, slug = ?3, updated_at = CURRENT_TIMESTAMP WHERE id = ?1',
+      )
+      .bind(workspaceId, name, slug),
+  ];
+  if (slug !== current.slug) {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO workspace_slug_history (slug, workspace_id) VALUES (?1, ?2)
+           ON CONFLICT(slug) DO NOTHING`,
+        )
+        .bind(current.slug, workspaceId),
+    );
+  }
+  await db.batch(statements);
+
+  return { ok: true, slug };
+}
+
+/** Addresses that would collide with the app's own routes. */
+const RESERVED_SLUGS = new Set([
+  'app',
+  'account',
+  'brands',
+  'assets',
+  'contact',
+  'events',
+  'oauth',
+  'notifications',
+  'continue',
+  'r',
+  'sw.js',
+]);
 
 export type WorkspaceOverview = {
   profile: { displayName: string; hasBio: boolean; hasAvatar: boolean } | null;

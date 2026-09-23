@@ -2,7 +2,8 @@ import { getAuth } from '@clerk/react-router/server';
 import { data, redirect } from 'react-router';
 
 import { cloudflare } from '../../lib/cloudflare';
-import { createWorkspace, toSlug } from '../../lib/workspaces.server';
+import { createWorkspace } from '../../lib/workspaces.server';
+import { toSlug } from '../../lib/workspaces';
 import type { Route } from './+types/create-brand';
 
 const MAX_NAME = 60;

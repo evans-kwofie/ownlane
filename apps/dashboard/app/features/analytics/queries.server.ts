@@ -80,7 +80,7 @@ export async function readAnalyticsOverview(
             AND occurred_at >= ?2 AND occurred_at < ?3
           GROUP BY source
           ORDER BY views DESC, source
-          LIMIT 6`,
+          LIMIT 5`,
         )
         .bind(profileId, range.start, endExclusive)
         .all<{ source: string; views: number }>(),
@@ -144,25 +144,57 @@ export async function readAnalyticsOverview(
       }>(),
   ]);
 
+  const [leadSummary, previousLeadSummary, leadTrendRows, leadSourceRows, leadStatusRows] =
+    await Promise.all([
+      readLeadSummary(db, profileId, range.start, endExclusive),
+      readLeadSummary(db, profileId, previousStart, range.start),
+      db.prepare(
+        `SELECT date(created_at) AS date, count(*) AS leads FROM leads
+          WHERE profile_id = ?1 AND created_at >= ?2 AND created_at < ?3 GROUP BY date(created_at)`,
+      ).bind(profileId, range.start, endExclusive).all<{ date: string; leads: number }>(),
+      db.prepare(
+        `SELECT coalesce(nullif(utm_source, ''), nullif(referrer_host, ''), 'Direct') AS source, count(*) AS leads
+          FROM leads WHERE profile_id = ?1 AND created_at >= ?2 AND created_at < ?3
+          GROUP BY source ORDER BY leads DESC, source LIMIT 6`,
+      ).bind(profileId, range.start, endExclusive).all<{ source: string; leads: number }>(),
+      db.prepare(
+        `SELECT status, count(*) AS count FROM leads WHERE profile_id = ?1 AND created_at >= ?2 AND created_at < ?3
+          GROUP BY status ORDER BY count DESC, status`,
+      ).bind(profileId, range.start, endExclusive).all<{ status: string; count: number }>(),
+    ]);
+
   const views = summary?.views ?? 0;
   const outboundClicks = summary?.outboundClicks ?? 0;
   const trendByDate = new Map((trendRows.results ?? []).map((row) => [row.date, row]));
+  const leadsByDate = new Map((leadTrendRows.results ?? []).map((row) => [row.date, row.leads]));
+  const acquisition = acquisitionRows.results ?? [];
+  // Every profile_view has a source, so the sources sum to views. Reporting the
+  // remainder keeps the acquisition ring honest: without it a top-5 ring claims
+  // those five are all the traffic.
+  const acquisitionOther = Math.max(
+    0,
+    views - acquisition.reduce((total, row) => total + row.views, 0),
+  );
 
   return {
     views,
     uniqueVisitors: summary?.uniqueVisitors ?? 0,
     outboundClicks,
+    leads: leadSummary?.leads ?? 0,
+    leadConversionRate: views ? Math.round(((leadSummary?.leads ?? 0) / views) * 1000) / 10 : 0,
     clickThroughRate: views ? Math.round((outboundClicks / views) * 1000) / 10 : 0,
     comparison: {
       views: previousSummary?.views ?? 0,
       uniqueVisitors: previousSummary?.uniqueVisitors ?? 0,
       outboundClicks: previousSummary?.outboundClicks ?? 0,
+      leads: previousLeadSummary?.leads ?? 0,
     },
     trend: datesInRange(range).map(
-      (date) => trendByDate.get(date) ?? { date, views: 0, clicks: 0 },
+      (date) => ({ ...(trendByDate.get(date) ?? { date, views: 0, clicks: 0 }), leads: leadsByDate.get(date) ?? 0 }),
     ),
     destinations: destinationRows.results ?? [],
-    acquisition: acquisitionRows.results ?? [],
+    acquisition,
+    acquisitionOther,
     countries: countryRows.results ?? [],
     devices: deviceRows.results ?? [],
     campaigns: (campaignRows.results ?? []).map((row) => ({
@@ -173,7 +205,14 @@ export async function readAnalyticsOverview(
     interactions: (interactionRows.results ?? []).flatMap((row) =>
       row.type ? [{ type: row.type, count: row.count }] : [],
     ),
+    leadSources: leadSourceRows.results ?? [],
+    leadStatuses: leadStatusRows.results ?? [],
   };
+}
+
+function readLeadSummary(db: D1Database, profileId: string, start: string, endExclusive: string) {
+  return db.prepare(`SELECT count(*) AS leads FROM leads WHERE profile_id = ?1 AND created_at >= ?2 AND created_at < ?3`)
+    .bind(profileId, start, endExclusive).first<{ leads: number }>();
 }
 
 function readSummary(db: D1Database, profileId: string, start: string, endExclusive: string) {

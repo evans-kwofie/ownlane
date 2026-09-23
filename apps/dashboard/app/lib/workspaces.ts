@@ -76,3 +76,21 @@ export function rememberLastUsedSlug(slug: string) {
     // A preference, not the truth — the URL stays authoritative either way.
   }
 }
+
+/**
+ * A workspace address from arbitrary text.
+ *
+ * Lives here rather than in `workspaces.server` because it is pure string work
+ * with no server dependency, and the settings form needs it to preview an
+ * address as someone types. Importing it from the server module pulled that
+ * whole module — and its database code — into the browser bundle.
+ */
+export function toSlug(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'me'
+  );
+}

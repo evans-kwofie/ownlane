@@ -9,12 +9,18 @@ import {
   updateConnectionPreferences,
 } from '../../features/connections/actions.server';
 import { listConnectedAccounts } from '../../features/connections/queries.server';
+import { refreshHandleCoverage } from '../../features/connections/handle-coverage.server';
+import { readHandleCoverage } from '../../features/connections/handle-queries.server';
 import {
   githubIsConfigured,
   revokeGitHubConnection,
   syncGitHubProfile,
 } from '../../features/connections/github.server';
-import { revokeTwitchConnection, syncTwitchProfile, twitchIsConfigured } from '../../features/connections/twitch.server';
+import {
+  revokeTwitchConnection,
+  syncTwitchProfile,
+  twitchIsConfigured,
+} from '../../features/connections/twitch.server';
 import { connectionPreferencesSchema } from '../../features/connections/schema';
 import { createProfileLink } from '../../features/links/actions.server';
 import { getLinkPlatform, normalizeProvider, platformUrl } from '../../features/links/platforms';
@@ -40,9 +46,19 @@ async function resolveContext(args: Route.LoaderArgs | Route.ActionArgs) {
 
 export async function loader(args: Route.LoaderArgs) {
   const { env, profile } = await resolveContext(args);
+  const { ctx } = args.context.get(cloudflare);
+
+  // Tops up after the response. Handle coverage changes over weeks, so this
+  // costs almost nothing and nobody is asked to press a button for it.
+  ctx.waitUntil(refreshHandleCoverage(env, profile.id).catch(() => undefined));
+
   return {
+    handles: await readHandleCoverage(env.DB, profile.id),
     accounts: await listConnectedAccounts(env.DB, profile.id),
-    enabledProviders: [githubIsConfigured(env) ? 'github' : null, twitchIsConfigured(env) ? 'twitch' : null].filter((provider): provider is string => Boolean(provider)),
+    enabledProviders: [
+      githubIsConfigured(env) ? 'github' : null,
+      twitchIsConfigured(env) ? 'twitch' : null,
+    ].filter((provider): provider is string => Boolean(provider)),
   };
 }
 
@@ -68,8 +84,15 @@ export async function action(args: Route.ActionArgs) {
   }
 
   if (intent === 'disconnect') {
-    const provider = await env.DB.prepare('SELECT provider FROM connected_accounts WHERE id=?1 AND profile_id=?2').bind(accountId, profile.id).first<{provider:string}>();
-    const revoked = provider?.provider === 'twitch' ? await revokeTwitchConnection(env, profile.id, accountId) : await revokeGitHubConnection(env, profile.id, accountId);
+    const provider = await env.DB.prepare(
+      'SELECT provider FROM connected_accounts WHERE id=?1 AND profile_id=?2',
+    )
+      .bind(accountId, profile.id)
+      .first<{ provider: string }>();
+    const revoked =
+      provider?.provider === 'twitch'
+        ? await revokeTwitchConnection(env, profile.id, accountId)
+        : await revokeGitHubConnection(env, profile.id, accountId);
     if (!revoked) {
       return data(
         { error: 'GitHub could not be disconnected. Please try again.' },
@@ -135,7 +158,9 @@ export async function action(args: Route.ActionArgs) {
   if (intent === 'sync-github-profile') {
     try {
       const fields = await syncGitHubProfile(env, { accountId, profile });
-      return { message: `GitHub updated: ${fields.length} ${fields.length === 1 ? 'field' : 'fields'}` };
+      return {
+        message: `GitHub updated: ${fields.length} ${fields.length === 1 ? 'field' : 'fields'}`,
+      };
     } catch (error) {
       console.error('GitHub profile sync failed', error);
       return data(
@@ -146,8 +171,16 @@ export async function action(args: Route.ActionArgs) {
   }
 
   if (intent === 'sync-twitch-profile') {
-    try { await syncTwitchProfile(env, { accountId, profile }); return { message: 'Twitch channel description updated' }; }
-    catch (error) { console.error('Twitch profile sync failed', error); return data({ error: error instanceof Error ? error.message : 'Twitch profile sync failed.' }, { status: 502 }); }
+    try {
+      await syncTwitchProfile(env, { accountId, profile });
+      return { message: 'Twitch channel description updated' };
+    } catch (error) {
+      console.error('Twitch profile sync failed', error);
+      return data(
+        { error: error instanceof Error ? error.message : 'Twitch profile sync failed.' },
+        { status: 502 },
+      );
+    }
   }
 
   return data({ error: 'Unknown connection action.' }, { status: 400 });

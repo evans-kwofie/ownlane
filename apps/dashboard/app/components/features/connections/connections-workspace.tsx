@@ -13,11 +13,13 @@ import { Button } from '@ownlane/ui/components/button';
 import { toast } from '@ownlane/ui/components/sonner';
 import { Link, useFetcher, useSearchParams } from 'react-router';
 
+import { HandleCoveragePanel } from './handle-coverage-panel';
 import { PageHeader } from '../../page-header';
 import { getConnectionProvider } from '../../../features/connections/providers';
 import type { ConnectedAccount } from '../../../features/connections/schema';
 import { PlatformIcon, getLinkPlatform, platformColors } from '../../../features/links/platforms';
 import { useWorkspacePath } from '../../../lib/workspaces';
+import type { HandleCoverage } from '../../../features/connections/handle-queries.server';
 import { ConnectionManager, ConnectionStateBadge } from './connection-manager';
 
 type Result = { message?: string; error?: string };
@@ -25,12 +27,12 @@ type Result = { message?: string; error?: string };
 export function ConnectionsWorkspace({
   accounts,
   enabledProviders,
+  handles,
 }: {
   accounts: ConnectedAccount[];
   enabledProviders: string[];
+  handles: HandleCoverage;
 }) {
-  console.log('connected accounts', accounts);
-  console.log('enabled providers', enabledProviders);
   const workspacePath = useWorkspacePath();
   const [searchParams, setSearchParams] = useSearchParams();
   const mutation = useFetcher<Result>();
@@ -75,6 +77,8 @@ export function ConnectionsWorkspace({
         description="Authorize the platforms Ownlane can read from, update and keep aligned with this identity."
         title="Connections"
       />
+
+      <HandleCoveragePanel coverage={handles} />
 
       {accounts.length ? (
         <div className="mb-6 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

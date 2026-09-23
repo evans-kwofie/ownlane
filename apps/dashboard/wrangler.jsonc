@@ -4,7 +4,20 @@
 	"main": "./workers/app.ts",
 	"vars": {
 		// Where published profiles live. Empty in .dev.vars means "this host".
-		"PUBLIC_SITE_ORIGIN": "https://useownlane.com"
+		"PUBLIC_SITE_ORIGIN": "https://useownlane.com",
+		// Envelope sender for lead notifications. Must be on a domain verified
+		// for sending in Cloudflare Email Routing.
+		"LEAD_EMAIL_FROM": "notifications@useownlane.com",
+		// Web Push. The PUBLIC half of the VAPID pair, handed to every browser
+		// that subscribes. Its counterpart VAPID_PRIVATE_KEY is set with
+		// `wrangler secret put` and never appears in this file.
+		// Generate the pair with scripts/generate-vapid-keys.mjs.
+		"VITE_VAPID_PUBLIC_KEY": "BCwTvRYOHRpWW8A6jYV83R9AelVMWXO_NXNHrZ7B_d1DzNKSoTLh9LeJWFDlklE9NDL-ZcKmT52x_c4o3FIBTn8",
+		"VAPID_SUBJECT": "mailto:support@useownlane.com",
+		// Turnstile's SITE key: rendered into the public page and seen by every
+		// visitor. Its counterpart TURNSTILE_SECRET_KEY is set with
+		// `wrangler secret put` and never appears in this file.
+		"VITE_TURNSTILE_SITE_KEY": ""
 	},
 	"triggers": {
 		// Scheduled profile changes are checked every five minutes.
@@ -32,6 +45,14 @@
 		{
 			"binding": "OAUTH_STATE",
 			"id": "<your-oauth-state-kv-namespace-id>"
+		}
+	],
+	// Lead notifications. Cloudflare Email Routing delivers only to addresses
+	// verified as destinations on this account, which covers notifying a profile
+	// owner. It cannot send to an arbitrary recipient.
+	"send_email": [
+		{
+			"name": "LEAD_EMAIL"
 		}
 	],
 	"queues": {

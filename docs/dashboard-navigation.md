@@ -27,21 +27,27 @@ Thirteen destinations, grouped. `:w` is the workspace slug — see
 [Workspace in the URL](#workspace-in-the-url). Overview sits at the top; Developer and Settings
 at the bottom, outside the groups.
 
-| Group        | Item            | Route                 | Module                                  | State           |
-| ------------ | --------------- | --------------------- | --------------------------------------- | --------------- |
-| —            | Overview        | `/app/:w`             | Cross-module attention surface          | Built           |
-| Identity     | Profile         | `/app/:w/profile`     | 1. Canonical identity profile           | Shell           |
-| Identity     | Public site     | `/app/:w/site`        | 2. Public Ownlane profile               | Shell           |
-| Identity     | Assets          | `/app/:w/assets`      | 6. Asset and brand library              | Shell           |
-| Distribution | Links           | `/app/:w/links`       | 5. Link and campaign control centre     | Shell           |
-| Distribution | Connections     | `/app/:w/connections` | 3. Connected-account directory          | Shell           |
-| Distribution | Content         | `/app/:w/content`     | 8. Cross-platform content presence      | Shell           |
-| Insight      | Activity        | `/app/:w/activity`    | 4. Universal profile sync               | Shell           |
-| Insight      | Identity health | `/app/:w/health`      | 7. Quality and consistency intelligence | Shell           |
-| Insight      | Analytics       | `/app/:w/analytics`   | 10. Analytics                           | Shell           |
-| Insight      | Audience        | `/app/:w/audience`    | 9. Contacts, leads, audience ownership  | Shell           |
-| —            | Developer       | `/app/:w/developer`   | 13. Developer platform                  | Shell           |
-| —            | Settings        | `/app/:w/settings`    | Account, security, workspace            | Partially built |
+| Group        | Item            | Route                           | Module                                  | State |
+| ------------ | --------------- | ------------------------------- | --------------------------------------- | ----- |
+| —            | Overview        | `/app/:w`                       | Cross-module attention surface          | Built |
+| Identity     | Profile         | `/app/:w/profile`               | 1. Canonical identity profile           | Built |
+| Identity     | Public site     | `/app/:w/profile/configuration` | 2. Public Ownlane profile               | Shell |
+| Identity     | Assets          | `/app/:w/assets`                | 6. Asset and brand library              | Built |
+| Distribution | Links           | `/app/:w/links`                 | 5. Link and campaign control centre     | Built |
+| Distribution | Connections     | `/app/:w/connections`           | 3. Connected-account directory          | Built |
+| Distribution | Content         | `/app/:w/content`               | 8. Cross-platform content presence      | Built |
+| Insight      | Activity        | `/app/:w/activity`              | 4. Universal profile sync               | Shell |
+| Insight      | Identity health | `/app/:w/health`                | 7. Quality and consistency intelligence | Shell |
+| Insight      | Analytics       | `/app/:w/analytics`             | 10. Analytics                           | Built |
+| Insight      | Audience        | `/app/:w/audience`              | 9. Contacts, leads, audience ownership  | Built |
+| —            | Developer       | `/app/:w/developer`             | 13. Developer platform                  | Shell |
+| —            | Settings        | `/app/:w/settings`              | Account, security, workspace            | Shell |
+
+Two shells remain: **Identity health** and **Developer**. Public
+site renders and has an editor, but nothing it changes is saved — it is local
+component state with no loader or action, so it counts as a shell until it has a
+data layer. Settings is the same. The Developer page's own sequencing is decided
+separately in [developer platform sequencing](developer-platform.md).
 
 Overview answers "what needs my attention?" — profile health, pending syncs,
 broken links, connection status, recent activity. It is the sign-in destination.
@@ -58,11 +64,32 @@ Each needs its data layer before it means anything. Rough order of dependency:
 1. **Profile** — the canonical record everything else copies. Nothing downstream
    works without it.
 2. **Connections** — provider auth and the capability model per platform.
-3. **Activity** — the sync engine's log, which only exists once syncs run.
-4. **Public site** — publishes Profile, Links and Assets at an address.
-5. Everything else builds on those four.
+3. **Public site** — publishes Profile, Links and Assets at an address.
+4. Everything else builds on those three.
 
-### Deliberate exclusions
+Profile, Connections, Links, Content, Assets, Analytics and Audience now read and
+write real data. Audience also owns the public contact form, and the settings for
+that form sit on the Audience page rather than in Public site only because Public
+site has no data layer yet; they move when it gets one.
+
+### Removed: Activity
+
+There was an Activity destination, holding the log of what Ownlane did on a
+person's behalf. It was removed rather than built, because every event worth
+seeing already has a better home: a failed renewal or a broken link is a
+**Health** finding, a new lead is in **Audience** beside the lead itself, and a
+profile change is in **Profile** with the version history that can restore it.
+What remained was a log of chores — tokens renewed at 3am, link checks that
+passed — which nobody opens twice.
+
+The case for an activity log is accountability for **outward writes**: Ownlane
+changing a public identity on another platform without being asked. That case is
+real, and it arrives with the sync engine. Until then Ownlane's only outward
+writes are buttons a person presses themselves, and they already know.
+
+Revisit when sync writes without a person initiating it. Not before.
+
+## Deliberate exclusions
 
 - **Billing** lives inside Settings (`/app/settings/billing`) until there are
   plans to change. It earns a rail item only if usage and invoices become
@@ -146,14 +173,17 @@ ungrouped at the top, Settings stays ungrouped at the bottom:
 
 - **Identity** — Profile, Public site, Assets
 - **Distribution** — Links, Connections, Content
-- **Insight** — Activity, Health, Analytics, Audience
-- **Workspace** — Brands, Developer
+- **Insight** — Health, Analytics, Audience
+
+Developer and Settings stay ungrouped at the bottom, beside Overview at the top.
+There is no Workspace group: brands are reached through the switcher, not the
+rail, as [Deliberate exclusions](#deliberate-exclusions) sets out.
 
 ## Boundaries worth holding
 
-- **Overview, Activity and Health answer one question** between them: what is
-  broken and what happened. Overview summarises; Activity is the log; Health is
-  the audit. If a third page starts listing problems, it belongs in one of these.
+- **Overview and Health answer one question** between them: what is broken.
+  Overview summarises; Health is the audit. If a third page starts listing
+  problems, it belongs in one of these.
 - **Profile is data; Public site is its rendering.** Anything that changes what
   is true goes in Profile. Anything that changes how it looks goes in Public
   site.

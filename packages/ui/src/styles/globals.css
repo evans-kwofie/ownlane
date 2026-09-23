@@ -31,11 +31,24 @@
   --border: #0000001f;
   --input: #00000026;
   --ring: var(--ownlane-orange);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* Chart series. Fixed slot order — a hue belongs to an entity, never to a
+     rank, so a filter never repaints the survivors. Validated for lightness,
+     chroma, colourblind separation and contrast against --card in both themes. */
+  --chart-1: #ff4d00;
+  --chart-2: #2a78d6;
+  --chart-3: #1baf7a;
+  --chart-4: #6b4eeb;
+  --chart-5: #e87ba4;
+  /* "Other"/remainder buckets: deliberately not a hue, so they never read as an entity. */
+  --chart-rest: #a7a7a3;
+  /* Fill opacity under lines and areas. */
+  --chart-tint: 0.14;
+  /* Wash behind a tinted icon chip. */
+  --chart-wash: 0.1;
+  /* Reserved for state. Never reused as a series colour. */
+  --chart-up: #0ca30c;
+  --chart-warn: #fab219;
+  --chart-down: #d03b3b;
   --sidebar: var(--ownlane-white);
   --sidebar-foreground: var(--ownlane-black);
   --sidebar-primary: var(--ownlane-orange);
@@ -66,11 +79,19 @@
   --border: #ffffff26;
   --input: #ffffff33;
   --ring: var(--ownlane-orange);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  /* The same five hues, re-stepped for the dark surface — not an inversion.
+     A series keeps its identity when the theme changes. */
+  --chart-1: #f2551a;
+  --chart-2: #4b92e8;
+  --chart-3: #199e70;
+  --chart-4: #9085e9;
+  --chart-5: #d55181;
+  --chart-rest: #6f6f6b;
+  --chart-tint: 0.2;
+  --chart-wash: 0.16;
+  --chart-up: #0ca30c;
+  --chart-warn: #fab219;
+  --chart-down: #d03b3b;
   --sidebar: #111111;
   --sidebar-foreground: var(--ownlane-white);
   --sidebar-primary: var(--ownlane-orange);
@@ -115,6 +136,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-rest: var(--chart-rest);
+  --color-chart-up: var(--chart-up);
+  --color-chart-warn: var(--chart-warn);
+  --color-chart-down: var(--chart-down);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

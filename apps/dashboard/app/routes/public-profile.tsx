@@ -13,6 +13,8 @@ import {
   getLinkPlatform,
   platformColors,
 } from '../features/links/platforms';
+import { ContactForm } from '../components/features/audience/contact-form';
+import { readContactFormSettings } from '../features/audience/queries.server';
 import { cloudflare } from '../lib/cloudflare';
 import { PROFILE_FIELDS, fieldLabel, publicFields, type PublicSlot } from '../lib/profile-fields';
 import {
@@ -30,11 +32,31 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const { profile } = loaderData.page;
   const name = toCapitalised(profile.displayName);
 
+  // Every preview needs an absolute URL — a relative one resolves against the
+  // crawler, not this site. The cover is the intended image; the avatar stands
+  // in so a shared link is never imageless.
+  const imageKey = profile.coverKey || profile.avatarKey;
+  const image = imageKey ? `${loaderData.origin}/assets/${imageKey}` : null;
+
   return [
     { title: `${name} — Ownlane` },
     { name: 'description', content: profile.shortBio || profile.mediumBio || `${name} on Ownlane` },
     { property: 'og:title', content: name },
     { property: 'og:description', content: profile.shortBio || profile.mediumBio || '' },
+    { property: 'og:type', content: 'profile' },
+    { property: 'og:url', content: `${loaderData.origin}/${loaderData.page.slug}` },
+    ...(image
+      ? [
+          { property: 'og:image', content: image },
+          { property: 'og:image:alt', content: name },
+          // A cover is a banner; an avatar crops badly in a wide card.
+          {
+            name: 'twitter:card',
+            content: profile.coverKey ? 'summary_large_image' : 'summary',
+          },
+          { name: 'twitter:image', content: image },
+        ]
+      : []),
     ...(loaderData.page.visibility === 'public' ? [] : [{ name: 'robots', content: 'noindex' }]),
   ];
 }
@@ -61,11 +83,22 @@ export async function loader(args: Route.LoaderArgs) {
     preview = true;
   }
 
-  const featuredContent = (await listContentItems(env.DB, page.profile.id)).filter(
-    (item) => item.isFeatured,
-  );
+  const [featuredContent, contactForm] = await Promise.all([
+    listContentItems(env.DB, page.profile.id).then((items) =>
+      items.filter((item) => item.isFeatured),
+    ),
+    readContactFormSettings(env.DB, page.profile.id),
+  ]);
 
-  return { page, origin, preview, featuredContent };
+  return {
+    page,
+    origin,
+    preview,
+    featuredContent,
+    contactForm,
+    // Public by design: Turnstile's site key identifies the widget, not the account.
+    turnstileSiteKey: env.VITE_TURNSTILE_SITE_KEY,
+  };
 }
 
 /** A choice field reads as its label; everything else as its value. */
@@ -112,7 +145,7 @@ function toList(value: string) {
 }
 
 export default function PublicProfile({ loaderData }: Route.ComponentProps) {
-  const { page, origin, preview, featuredContent } = loaderData;
+  const { page, origin, preview, featuredContent, contactForm, turnstileSiteKey } = loaderData;
   const { profile } = page;
 
   /** Public slots are filled from the manifest, so a described field appears
@@ -169,7 +202,9 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
     page.services.length ? { id: 'services', label: 'What I do' } : null,
     page.credibility.length ? { id: 'proof', label: 'Proof' } : null,
     facts.length || place ? { id: 'particulars', label: 'Particulars' } : null,
-    page.contact.length || website ? { id: 'contact', label: 'Get in touch' } : null,
+    page.contact.length || website || contactForm.isEnabled
+      ? { id: 'contact', label: contactForm.heading }
+      : null,
   ].filter((entry): entry is TocEntry => entry !== null);
 
   return (
@@ -196,7 +231,20 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
 
       <ProfileToc entries={toc} />
 
-      <main className="mx-auto w-full max-w-[640px] px-5 py-14 sm:px-8 sm:py-20">
+      {profile.coverKey ? (
+        <img
+          alt=""
+          className="h-[180px] w-full object-cover sm:h-[240px]"
+          src={`/assets/${profile.coverKey}`}
+        />
+      ) : null}
+
+      <main
+        className={`mx-auto w-full max-w-[640px] px-5 sm:px-8 ${
+          // The banner already provides the space above the name.
+          profile.coverKey ? 'pb-14 pt-10 sm:pb-20 sm:pt-12' : 'py-14 sm:py-20'
+        }`}
+      >
         <header className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
           {profile.avatarKey ? (
             <img
@@ -368,8 +416,8 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
           </Block>
         ) : null}
 
-        {page.contact.length || website ? (
-          <Block id="contact" title="Get in touch">
+        {page.contact.length || website || contactForm.isEnabled ? (
+          <Block id="contact" title={contactForm.heading}>
             <div className="flex flex-wrap gap-2">
               {page.contact.map(({ channel, value }) => (
                 <a
@@ -398,6 +446,20 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 </a>
               ) : null}
             </div>
+            {contactForm.isEnabled ? (
+              <div className="mt-7 max-w-[560px]">
+                {contactForm.intro ? (
+                  <p className="mb-5 text-[14px] leading-relaxed text-muted-foreground">
+                    {contactForm.intro}
+                  </p>
+                ) : null}
+                <ContactForm
+                  settings={contactForm}
+                  slug={page.slug}
+                  turnstileSiteKey={turnstileSiteKey}
+                />
+              </div>
+            ) : null}
           </Block>
         ) : null}
 

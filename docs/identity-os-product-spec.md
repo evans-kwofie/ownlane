@@ -58,7 +58,9 @@ This document captures the intended complete product scope following the identit
 
 ## 7. Profile quality and consistency intelligence
 
-- Identity consistency score; missing/outdated/conflicting field detection; broken links; stale campaigns; and impersonation/handle-squatting monitoring.
+- Identity consistency score; missing/outdated/conflicting field detection; broken links; stale campaigns; and handle coverage.
+- Handle coverage reports one fact per platform: whether `platform.com/yourhandle` resolves, and whether it resolves to an account the user has connected. That distinguishes a handle still free to claim from one already held by somebody else.
+- It is deliberately not impersonation detection. No provider offers an API for finding accounts that resemble a person, the platforms that could are exactly the ones that refuse such access, and identifying a lookalike would mean accusing a real individual on a fuzzy match. Ownlane reports what resolves and leaves the conclusion to the user.
 - Search-result, SEO/discoverability, accessibility, and trust audits.
 - Profile-strength recommendations and opt-in category benchmarks.
 - AI assistance for bios, headlines, CTAs, link labels, and suggestions constrained by the user's brand voice.
