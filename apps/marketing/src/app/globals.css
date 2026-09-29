@@ -1,84 +1,202 @@
-@import "@ownlane/ui/globals.css";
+@import '@ownlane/ui/globals.css';
 
-.mobile-menu-item {
-  animation: menu-staccato 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes menu-staccato {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.reading-text {
-  --reading-progress: 0;
-  background: linear-gradient(90deg, #000 0 calc(var(--reading-progress) * 100%), #a3a3a3 calc(var(--reading-progress) * 100%) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reading-text {
-    background: none;
-    color: #000;
+@keyframes ownlane-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) rotate(0deg);
+  }
+  14% {
+    opacity: 1;
+  }
+  76% {
+    opacity: 1;
+    transform: translate3d(8px, 82px, 0) rotate(235deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(12px, 112px, 0) rotate(310deg);
   }
 }
-@theme inline {
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+.ownlane-confetti {
+  animation: ownlane-confetti-fall 2.6s cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes ownlane-orbit-node-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.reveal { animation: reveal 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-.reveal-delay-1 { animation-delay: 80ms; }
-.reveal-delay-2 { animation-delay: 160ms; }
-.reveal-delay-3 { animation-delay: 240ms; }
-
-.button-pour {
-  isolation: isolate;
-  overflow: hidden;
-  position: relative;
-  transition: color 420ms cubic-bezier(0.16, 1, 0.3, 1);
+.ownlane-orbit-node {
+  animation: ownlane-orbit-node-in 480ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-.button-pour::before {
-  background: var(--button-fill);
-  content: '';
-  inset: 0;
-  position: absolute;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 0;
+@keyframes ownlane-audit-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.button-pour:hover::before {
-  transform: scaleX(1);
+@keyframes ownlane-drift-value-enter {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.button-pour > span {
-  position: relative;
-  z-index: 1;
+.ownlane-audit-reference,
+.ownlane-audit-row,
+.ownlane-audit-footer {
+  animation: ownlane-audit-enter 460ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-.marquee-track {
-  animation: marquee 42s linear infinite;
+.ownlane-audit-reference {
+  animation-delay: 40ms;
 }
 
-@keyframes marquee {
-  to { transform: translateX(-25%); }
+.ownlane-audit-footer {
+  animation-delay: 420ms;
 }
 
-@keyframes reveal {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+.ownlane-drift-value {
+  animation: ownlane-drift-value-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ownlane-concept-enter {
+  animation: ownlane-audit-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal { animation: none; }
-  .marquee-track { animation: none; }
-  .mobile-menu-item { animation: none; }
+  .ownlane-confetti {
+    animation: none;
+    opacity: 0;
+  }
+
+  .ownlane-orbit-node {
+    animation: none;
+  }
+
+  .ownlane-audit-reference,
+  .ownlane-audit-row,
+  .ownlane-audit-footer,
+  .ownlane-drift-value,
+  .ownlane-concept-enter {
+    animation: none;
+  }
+}
+
+/* No font override: the marketing site uses the same type as the product, from
+   @ownlane/ui's globals. Two faces across one company reads as two companies.
+
+   The animation utilities that used to live here (.reveal, .button-pour,
+   .marquee-track, .mobile-menu-item) went with the pages that used them. */
+
+@keyframes ownlane-lead-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+    background-color: color-mix(in srgb, var(--primary) 14%, transparent);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ownlane-scan {
+  from {
+    top: -40px;
+    opacity: 1;
+  }
+  to {
+    top: 150px;
+    opacity: 1;
+  }
+}
+
+@keyframes ownlane-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.ownlane-lead-in {
+  animation: ownlane-lead-in 600ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.ownlane-scan {
+  animation: ownlane-scan 2s ease-in-out both;
+}
+
+.ownlane-pop {
+  animation: ownlane-pop 400ms cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ownlane-lead-in,
+  .ownlane-scan,
+  .ownlane-pop {
+    animation: none;
+  }
+}
+
+@keyframes ownlane-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+@keyframes ownlane-tick-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ownlane-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.ownlane-slide-in {
+  animation: ownlane-slide-in 450ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.ownlane-tick path {
+  stroke-dasharray: 14;
+  stroke-dashoffset: 14;
+  animation: ownlane-tick-draw 400ms 50ms forwards;
+}
+
+.ownlane-caret {
+  animation: ownlane-caret 1s steps(2) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ownlane-slide-in,
+  .ownlane-caret {
+    animation: none;
+  }
+
+  .ownlane-tick path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }

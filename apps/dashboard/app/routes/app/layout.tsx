@@ -1,7 +1,8 @@
 import { createClerkClient, getAuth } from '@clerk/react-router/server';
-import { Outlet, redirect } from 'react-router';
+import { data, Outlet, redirect } from 'react-router';
 
 import { cloudflare } from '../../lib/cloudflare';
+import { onboardingHandleCookie, readOnboardingHandle } from '../../lib/onboarding.server';
 import { ensureWorkspaces } from '../../lib/workspaces.server';
 import { toSlug } from '../../lib/workspaces';
 import type { Route } from './+types/layout';
@@ -23,7 +24,8 @@ export async function loader(args: Route.LoaderArgs) {
   const user = await clerk.users.getUser(userId);
 
   const email = user.primaryEmailAddress?.emailAddress ?? '';
-  const handle = user.username || email.split('@')[0] || 'me';
+  const onboardingHandle = readOnboardingHandle(args.request);
+  const handle = onboardingHandle || user.username || email.split('@')[0] || 'me';
   const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || handle;
 
   // In development this resolves to the dev server, so the link previews the
@@ -36,7 +38,16 @@ export async function loader(args: Route.LoaderArgs) {
     name,
   });
 
-  return { workspaces, publicSiteOrigin };
+  return data(
+    { workspaces, publicSiteOrigin },
+    onboardingHandle
+      ? {
+          headers: {
+            'Set-Cookie': onboardingHandleCookie(args.request),
+          },
+        }
+      : undefined,
+  );
 }
 
 export default function AppLayout() {

@@ -14,6 +14,9 @@ type Pages = {
   "/": {
     params: {};
   };
+  "/start": {
+    params: {};
+  };
   "/continue": {
     params: {};
   };
@@ -42,6 +45,9 @@ type Pages = {
     params: {
       "slug": string;
     };
+  };
+  "/name-availability": {
+    params: {};
   };
   "/mcp": {
     params: {};
@@ -253,11 +259,15 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/continue" | "/assets/:id" | "/events/profile/:slug/view" | "/events/profile/:slug/interaction" | "/r/:kind/:destinationId" | "/contact/:slug" | "/mcp" | "/embed.js" | "/embed/:slug" | "/v0/workspaces/:workspace/profile" | "/v0/workspaces/:workspace/links" | "/v0/workspaces/:workspace/content" | "/v0/workspaces/:workspace/analytics" | "/v0/workspaces/:workspace/audience" | "/v0/workspaces/:workspace/leads" | "/sw.js" | "/notifications/summary" | "/oauth/github/setup" | "/oauth/callback/github" | "/oauth/callback/twitch" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/connections/github/connect" | "/app/:workspace/connections/twitch/connect" | "/app/:workspace/content" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/audience/export.csv" | "/app/:workspace/audience/push" | "/app/:workspace/developer" | "/app/:workspace/developer/webhooks" | "/app/:workspace/developer/mcp" | "/app/:workspace/developer/embeds" | "/app/:workspace/settings" | "/app/:workspace/settings/team" | "/app/:workspace/settings/billing" | "/:slug/contact.vcf" | "/:slug";
+    page: "/" | "/start" | "/continue" | "/assets/:id" | "/events/profile/:slug/view" | "/events/profile/:slug/interaction" | "/r/:kind/:destinationId" | "/contact/:slug" | "/name-availability" | "/mcp" | "/embed.js" | "/embed/:slug" | "/v0/workspaces/:workspace/profile" | "/v0/workspaces/:workspace/links" | "/v0/workspaces/:workspace/content" | "/v0/workspaces/:workspace/analytics" | "/v0/workspaces/:workspace/audience" | "/v0/workspaces/:workspace/leads" | "/sw.js" | "/notifications/summary" | "/oauth/github/setup" | "/oauth/callback/github" | "/oauth/callback/twitch" | "/app" | "/app/account" | "/app/brands/new" | "/app/brands/delete" | "/app/:workspace" | "/app/:workspace/profile" | "/app/:workspace/profile/configuration" | "/app/:workspace/assets" | "/app/:workspace/links" | "/app/:workspace/links/new" | "/app/:workspace/links/:linkId" | "/app/:workspace/links/collections/:collectionId" | "/app/:workspace/connections" | "/app/:workspace/connections/new" | "/app/:workspace/connections/github/connect" | "/app/:workspace/connections/twitch/connect" | "/app/:workspace/content" | "/app/:workspace/health" | "/app/:workspace/analytics" | "/app/:workspace/audience" | "/app/:workspace/audience/export.csv" | "/app/:workspace/audience/push" | "/app/:workspace/developer" | "/app/:workspace/developer/webhooks" | "/app/:workspace/developer/mcp" | "/app/:workspace/developer/embeds" | "/app/:workspace/settings" | "/app/:workspace/settings/team" | "/app/:workspace/settings/billing" | "/:slug/contact.vcf" | "/:slug";
   };
   "routes/home.tsx": {
     id: "routes/home";
     page: "/";
+  };
+  "routes/start.tsx": {
+    id: "routes/start";
+    page: "/start";
   };
   "routes/continue.tsx": {
     id: "routes/continue";
@@ -282,6 +292,10 @@ type RouteFiles = {
   "routes/lead-capture.tsx": {
     id: "routes/lead-capture";
     page: "/contact/:slug";
+  };
+  "routes/name-availability.tsx": {
+    id: "routes/name-availability";
+    page: "/name-availability";
   };
   "routes/api/mcp.tsx": {
     id: "routes/api/mcp";
@@ -483,12 +497,14 @@ type RouteFiles = {
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
+  "routes/start": typeof import("./app/routes/start.tsx");
   "routes/continue": typeof import("./app/routes/continue.tsx");
   "routes/assets": typeof import("./app/routes/assets.tsx");
   "routes/analytics-profile-view": typeof import("./app/routes/analytics-profile-view.tsx");
   "routes/analytics-profile-interaction": typeof import("./app/routes/analytics-profile-interaction.tsx");
   "routes/outbound-redirect": typeof import("./app/routes/outbound-redirect.tsx");
   "routes/lead-capture": typeof import("./app/routes/lead-capture.tsx");
+  "routes/name-availability": typeof import("./app/routes/name-availability.tsx");
   "routes/api/mcp": typeof import("./app/routes/api/mcp.tsx");
   "routes/embed-script": typeof import("./app/routes/embed-script.tsx");
   "routes/embed-frame": typeof import("./app/routes/embed-frame.tsx");

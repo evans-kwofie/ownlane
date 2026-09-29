@@ -12,7 +12,10 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "deploy:staging": "pnpm --filter dashboard deploy:staging",
+    "deploy:production": "pnpm --filter dashboard deploy:production",
+    "check": "pnpm --filter @ownlane/ui typecheck && pnpm --filter dashboard typecheck && pnpm format:check"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

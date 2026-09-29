@@ -58,5 +58,6 @@ export default {
         })
         .catch((error) => console.error('token renewal failed', error)),
     );
+
   },
 } satisfies ExportedHandler<Env>;

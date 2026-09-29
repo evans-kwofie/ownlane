@@ -1,66 +1,166 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "ownlane-dashboard",
-	"main": "./workers/app.ts",
-	"vars": {
-		// Where published profiles live. Empty in .dev.vars means "this host".
-		"PUBLIC_SITE_ORIGIN": "https://useownlane.com",
-		// Envelope sender for lead notifications. Must be on a domain verified
-		// for sending in Cloudflare Email Routing.
-		"LEAD_EMAIL_FROM": "notifications@useownlane.com",
-		// Web Push. The PUBLIC half of the VAPID pair, handed to every browser
-		// that subscribes. Its counterpart VAPID_PRIVATE_KEY is set with
-		// `wrangler secret put` and never appears in this file.
-		// Generate the pair with scripts/generate-vapid-keys.mjs.
-		"VITE_VAPID_PUBLIC_KEY": "BCwTvRYOHRpWW8A6jYV83R9AelVMWXO_NXNHrZ7B_d1DzNKSoTLh9LeJWFDlklE9NDL-ZcKmT52x_c4o3FIBTn8",
-		"VAPID_SUBJECT": "mailto:support@useownlane.com",
-		// Turnstile's SITE key: rendered into the public page and seen by every
-		// visitor. Its counterpart TURNSTILE_SECRET_KEY is set with
-		// `wrangler secret put` and never appears in this file.
-		"VITE_TURNSTILE_SITE_KEY": ""
-	},
-	"triggers": {
-		// Scheduled profile changes are checked every five minutes.
-		"crons": ["*/5 * * * *"]
-	},
-	"compatibility_date": "2026-09-15",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "ownlane",
-			"database_id": "6bc99c02-19be-45af-a732-10dea3c38c88",
-			"migrations_dir": "migrations"
-		}
-	],
-	"r2_buckets": [
-		{
-			"binding": "ASSETS_BUCKET",
-			"bucket_name": "ownlane-assets"
-		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "OAUTH_STATE",
-			"id": "<your-oauth-state-kv-namespace-id>"
-		}
-	],
-	// Lead notifications. Cloudflare Email Routing delivers only to addresses
-	// verified as destinations on this account, which covers notifying a profile
-	// owner. It cannot send to an arbitrary recipient.
-	"send_email": [
-		{
-			"name": "LEAD_EMAIL"
-		}
-	],
-	"queues": {
-		"producers": [
-			{
-				"binding": "SYNC_QUEUE",
-				"queue": "ownlane-profile-sync"
-			}
-		]
-	}
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ownlane-dashboard",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["nodejs_compat"],
+  // The client bundle. Without this the Worker runs but every stylesheet,
+  // script and image 404s.
+  "assets": {
+    "directory": "./build/client",
+    "binding": "ASSETS",
+  },
+  // ---------------------------------------------------------------------
+  // Everything below the `vars` block is the DEVELOPMENT configuration, used
+  // by `wrangler dev` and by `--env` runs that do not override it.
+  //
+  // Wrangler does NOT inherit bindings into named environments, so `staging`
+  // and `production` repeat their own. That is verbose and deliberate: a
+  // forgotten binding should fail loudly at deploy rather than quietly fall
+  // through to another environment's database.
+  // ---------------------------------------------------------------------
+  "vars": {
+    // Where published profiles live. Empty means "this host".
+    "PUBLIC_SITE_ORIGIN": "",
+    "LEAD_EMAIL_FROM": "notifications@useownlane.com",
+    // Web Push. The PUBLIC half of the VAPID pair, handed to every browser
+    // that subscribes. Its counterpart VAPID_PRIVATE_KEY is a secret.
+    // Generate the pair with scripts/generate-vapid-keys.mjs.
+    "VITE_VAPID_PUBLIC_KEY": "BCwTvRYOHRpWW8A6jYV83R9AelVMWXO_NXNHrZ7B_d1DzNKSoTLh9LeJWFDlklE9NDL-ZcKmT52x_c4o3FIBTn8",
+    "VAPID_SUBJECT": "mailto:support@useownlane.com",
+    // Turnstile's SITE key, rendered into the public page. Its counterpart
+    // TURNSTILE_SECRET_KEY is a secret. A widget is bound to a hostname, so
+    // each environment needs its own.
+    "VITE_TURNSTILE_SITE_KEY": "",
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ownlane",
+      "database_id": "6bc99c02-19be-45af-a732-10dea3c38c88",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "ownlane-assets",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_STATE",
+      "id": "8edd743658db435eb6277710f4acec8c",
+    },
+  ],
+  // Lead notifications. Email Routing delivers only to addresses verified as
+  // destinations on this account, which covers notifying a profile owner.
+  "send_email": [
+    {
+      "name": "LEAD_EMAIL",
+    },
+  ],
+  "env": {
+    // -------------------------------------------------------------------
+    // STAGING — its own database, bucket and namespace. Nothing here may
+    // point at a production resource: these nine migrations run against
+    // whatever `DB` resolves to.
+    // -------------------------------------------------------------------
+    "staging": {
+      "name": "ownlane-dashboard-staging",
+      "vars": {
+        // Public halves only. Every counterpart secret is set with
+        // `wrangler secret put --env staging` and never appears here.
+        "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_ZGVzdGluZWQtc25hcHBlci04ODg0LmNsZXJrLmFjY291bnRzLmRldiQ",
+        "GITHUB_CLIENT_ID": "Iv23liTUyZL3aNfsGDGM",
+        "GITHUB_APP_SLUG": "useownlane",
+        "TWITCH_CLIENT_ID": "0hspx2basiv8gn6k0u942ys01lhlm6",
+        "PUBLIC_SITE_ORIGIN": "https://ownlane-dashboard-staging.evanskwofie67.workers.dev",
+        "LEAD_EMAIL_FROM": "notifications@useownlane.com",
+        "VITE_VAPID_PUBLIC_KEY": "BJQHyq6QRrSAo2nsuEp-VDvvP26wsrLa5hplCxMNGb2RTgXFNQMykqEC6NZpXRnGrjcRuoY01J0aBTSOraOlD5g",
+        "VAPID_SUBJECT": "mailto:support@useownlane.com",
+        "VITE_TURNSTILE_SITE_KEY": "REPLACE_WITH_STAGING_TURNSTILE_SITE_KEY",
+      },
+      "triggers": {
+        "crons": ["*/5 * * * *"],
+      },
+      "assets": {
+        "directory": "./build/client",
+        "binding": "ASSETS",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ownlane-staging",
+          "database_id": "9ff93b59-88b1-45fc-8f6e-d7b7bbcd0a44",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "ASSETS_BUCKET",
+          "bucket_name": "ownlane-assets-staging",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "OAUTH_STATE",
+          "id": "8edd743658db435eb6277710f4acec8c",
+        },
+      ],
+      "send_email": [
+        {
+          "name": "LEAD_EMAIL",
+        },
+      ],
+    },
+    // -------------------------------------------------------------------
+    // PRODUCTION
+    // -------------------------------------------------------------------
+    "production": {
+      "name": "ownlane-dashboard",
+      "vars": {
+        "PUBLIC_SITE_ORIGIN": "https://useownlane.com",
+        "LEAD_EMAIL_FROM": "notifications@useownlane.com",
+        "VITE_VAPID_PUBLIC_KEY": "BCwTvRYOHRpWW8A6jYV83R9AelVMWXO_NXNHrZ7B_d1DzNKSoTLh9LeJWFDlklE9NDL-ZcKmT52x_c4o3FIBTn8",
+        "VAPID_SUBJECT": "mailto:support@useownlane.com",
+        "VITE_TURNSTILE_SITE_KEY": "REPLACE_WITH_PRODUCTION_TURNSTILE_SITE_KEY",
+      },
+      "triggers": {
+        "crons": ["*/5 * * * *"],
+      },
+      "assets": {
+        "directory": "./build/client",
+        "binding": "ASSETS",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ownlane",
+          "database_id": "6bc99c02-19be-45af-a732-10dea3c38c88",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "ASSETS_BUCKET",
+          "bucket_name": "ownlane-assets",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "OAUTH_STATE",
+          "id": "REPLACE_WITH_PRODUCTION_KV_ID",
+        },
+      ],
+      "send_email": [
+        {
+          "name": "LEAD_EMAIL",
+        },
+      ],
+    },
+  },
 }

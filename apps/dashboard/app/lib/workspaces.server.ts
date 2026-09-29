@@ -1,4 +1,8 @@
 import { toSlug, type Workspace } from './workspaces';
+import {
+  canonicalHandleKey,
+  isReservedHandle,
+} from '../features/identity/name-availability.server';
 
 /**
  * Workspace reads and writes. D1 has no interactive transactions, so anything
@@ -46,15 +50,22 @@ export async function listWorkspaces(db: D1Database, userId: string): Promise<Wo
  * Releasing a retired address for reuse would silently redirect somebody's old
  * links into a stranger's workspace.
  */
-async function slugTaken(db: D1Database, slug: string, exceptWorkspaceId?: string) {
+async function slugTaken(
+  db: D1Database,
+  slug: string,
+  exceptWorkspaceId?: string,
+) {
+  const key = canonicalHandleKey(slug);
   const row = await db
     .prepare(
-      `SELECT 1 FROM workspaces WHERE slug = ?1 AND (?2 IS NULL OR id <> ?2)
+      `SELECT 1 FROM workspaces
+        WHERE slug_key = ?1 AND (?2 IS NULL OR id <> ?2)
        UNION ALL
        SELECT 1 FROM workspace_slug_history
-        WHERE slug = ?1 AND (?2 IS NULL OR workspace_id <> ?2)`,
+        WHERE replace(replace(replace(lower(slug), '.', ''), '_', ''), '-', '') = ?1
+          AND (?2 IS NULL OR workspace_id <> ?2)`,
     )
-    .bind(slug, exceptWorkspaceId ?? null)
+    .bind(key, exceptWorkspaceId ?? null)
     .first();
   return row !== null;
 }
@@ -68,7 +79,7 @@ async function reserveSlug(db: D1Database, preferred: string) {
 
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = attempt === 0 ? base : `${base}-${attempt + 1}`;
-    if (!(await slugTaken(db, candidate))) return candidate;
+    if (!isReservedHandle(candidate) && !(await slugTaken(db, candidate))) return candidate;
   }
 
   return `${base}-${crypto.randomUUID().slice(0, 6)}`;
@@ -81,15 +92,23 @@ async function reserveSlug(db: D1Database, preferred: string) {
  */
 export async function createWorkspace(
   db: D1Database,
-  input: { userId: string; preferredSlug: string; name: string; kind: 'personal' | 'brand' },
+  input: {
+    userId: string;
+    preferredSlug: string;
+    name: string;
+    kind: 'personal' | 'brand';
+  },
 ): Promise<Workspace> {
   const slug = await reserveSlug(db, input.preferredSlug);
+  const slugKey = canonicalHandleKey(slug);
   const workspaceId = crypto.randomUUID();
 
   await db.batch([
     db
-      .prepare('INSERT INTO workspaces (id, slug, name, kind) VALUES (?1, ?2, ?3, ?4)')
-      .bind(workspaceId, slug, input.name, input.kind),
+      .prepare(
+        'INSERT INTO workspaces (id, slug, slug_key, name, kind) VALUES (?1, ?2, ?3, ?4, ?5)',
+      )
+      .bind(workspaceId, slug, slugKey, input.name, input.kind),
     db
       .prepare(
         'INSERT INTO workspace_members (id, workspace_id, user_id, role) VALUES (?1, ?2, ?3, ?4)',
@@ -180,7 +199,7 @@ export async function renameWorkspace(
   if (!slug || slug.length < 2) {
     return { ok: false, field: 'slug', error: 'An address needs at least two characters.' };
   }
-  if (RESERVED_SLUGS.has(slug)) {
+  if (isReservedHandle(slug) || RESERVED_SLUGS.has(slug)) {
     return { ok: false, field: 'slug', error: 'That address is reserved.' };
   }
 
@@ -197,9 +216,11 @@ export async function renameWorkspace(
   const statements = [
     db
       .prepare(
-        'UPDATE workspaces SET name = ?2, slug = ?3, updated_at = CURRENT_TIMESTAMP WHERE id = ?1',
+        `UPDATE workspaces
+            SET name = ?2, slug = ?3, slug_key = ?4, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?1`,
       )
-      .bind(workspaceId, name, slug),
+      .bind(workspaceId, name, slug, canonicalHandleKey(slug)),
   ];
   if (slug !== current.slug) {
     statements.push(

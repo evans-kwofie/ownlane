@@ -1,6 +1,8 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@ownlane/ui/components/tooltip';
 import { toCapitalised } from '@ownlane/ui/lib/text';
 
+import { publicAddress, usePublicSiteOrigin } from '../lib/workspaces';
+
 type IdentityCardProps = {
   name: string;
   tagline: string;
@@ -29,6 +31,7 @@ export function IdentityCard({
   visibility,
   embedded,
 }: IdentityCardProps) {
+  const address = publicAddress(usePublicSiteOrigin(), slug);
   const meta = [profession, pronouns].filter(Boolean).join(' · ');
 
   return (
@@ -81,8 +84,11 @@ export function IdentityCard({
           </Tooltip>
         ) : null}
 
+        {/* Read from PUBLIC_SITE_ORIGIN rather than written here: two screens
+            hardcoding different domains showed people two addresses for the
+            same profile. */}
         <p className="mt-2.5 truncate font-mono text-[11.5px] text-muted-foreground/70">
-          ownlane.com/{slug}
+          {address}
         </p>
       </div>
     </div>

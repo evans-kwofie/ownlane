@@ -2,12 +2,15 @@ import { index, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
   index('routes/home.tsx'),
+  route('start', 'routes/start.tsx'),
   route('continue', 'routes/continue.tsx'),
   route('assets/:id', 'routes/assets.tsx'),
   route('events/profile/:slug/view', 'routes/analytics-profile-view.tsx'),
   route('events/profile/:slug/interaction', 'routes/analytics-profile-interaction.tsx'),
   route('r/:kind/:destinationId', 'routes/outbound-redirect.tsx'),
   route('contact/:slug', 'routes/lead-capture.tsx'),
+  // Called cross-origin by the marketing site.
+  route('name-availability', 'routes/name-availability.tsx'),
 
   // Public API. `v0` is unstable by design: shipping `v1` owes compatibility to
   // every integrator from that day, and the profile shape is still moving.

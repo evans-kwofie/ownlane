@@ -89,8 +89,24 @@ export function toSlug(value: string) {
   return (
     value
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .replace(/[^a-z0-9._-]+/g, '-')
+      .replace(/^[._-]+|[._-]+$/g, '')
       .slice(0, 48) || 'me'
   );
+}
+
+/**
+ * A profile's public address, as shown to a person.
+ *
+ * The domain comes from `PUBLIC_SITE_ORIGIN` rather than being written into a
+ * component — two screens hardcoding different domains is how the app came to
+ * show `ownlane.com/x` in one place and `useownlane.com/x` in another.
+ *
+ * The scheme is dropped because this is for reading, not for clicking. When the
+ * handle format is settled (bare slug or `@slug`), this is the only place it
+ * changes.
+ */
+export function publicAddress(origin: string, slug: string) {
+  const host = origin.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  return `${host || 'ownlane.com'}/${slug}`;
 }

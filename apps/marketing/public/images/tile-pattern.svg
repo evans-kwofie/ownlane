@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dbe4e8"/>
+      <stop offset=".55" stop-color="#e6e9dc"/>
+      <stop offset="1" stop-color="#c3d0b4"/>
+    </linearGradient>
+    <filter id="dither" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.16  0 0 0 0 0.2  0 0 0 0 0.14  1.4 0 0 0 -0.55"/>
+      <feComponentTransfer><feFuncA type="discrete" tableValues="0 0 0 0.28 0.5"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="900" height="900" fill="url(#g)"/>
+  <rect width="900" height="900" filter="url(#dither)"/>
+</svg>

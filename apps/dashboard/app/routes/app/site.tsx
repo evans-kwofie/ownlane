@@ -2,7 +2,7 @@ import { useState, type DragEvent } from 'react';
 import { cn } from '@ownlane/ui/lib/utils';
 
 import { PageHeader } from '../../components/page-header';
-import { useActiveWorkspace } from '../../lib/workspaces';
+import { publicAddress, useActiveWorkspace, usePublicSiteOrigin } from '../../lib/workspaces';
 import type { Route } from './+types/site';
 
 export function meta(_: Route.MetaArgs) {
@@ -43,7 +43,7 @@ export default function PublicSite() {
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
 
   const profileName = workspace?.name || 'Your name';
-  const address = `useownlane.com/${slug || '…'}`;
+  const address = publicAddress(usePublicSiteOrigin(), slug || '…');
 
   function toggleSection(id: string) {
     setSections((current) =>

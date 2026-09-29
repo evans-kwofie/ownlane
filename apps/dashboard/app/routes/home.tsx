@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLoaderData, useNavigate } from 'react-router';
 import { useAuth, useSignIn, useSignUp } from '@clerk/react-router';
 
 import { Button } from '@ownlane/ui/components/button';
@@ -10,6 +10,7 @@ import { Label } from '@ownlane/ui/components/label';
 import { AuthShell } from '../components/auth-shell';
 import { GoogleMark } from '../components/google-mark';
 import { type AuthError, IDENTIFIER_NOT_FOUND, authErrorMessage } from '../lib/auth-errors';
+import { readOnboardingHandle } from '../lib/onboarding.server';
 import type { Route } from './+types/home';
 
 export function meta(_: Route.MetaArgs) {
@@ -25,7 +26,12 @@ const SSO_CALLBACK = '/continue';
 
 type Step = 'email' | 'code';
 
+export function loader(args: Route.LoaderArgs) {
+  return { onboardingHandle: readOnboardingHandle(args.request) };
+}
+
 export default function Home() {
+  const { onboardingHandle } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
   const { signIn } = useSignIn();
@@ -215,8 +221,20 @@ export default function Home() {
 
   return (
     <AuthShell
-      title="Sign in to Ownlane"
-      description="Manage the profile people find across every platform."
+      title={onboardingHandle ? 'Create your Ownlane' : 'Sign in to Ownlane'}
+      description={
+        onboardingHandle ? (
+          <>
+            Continue to set up{' '}
+            <span className="font-mono text-[13px] text-foreground">
+              ownlane.com/{onboardingHandle}
+            </span>
+            .
+          </>
+        ) : (
+          'Manage the profile people find across every platform.'
+        )
+      }
       footnote={
         <>
           By continuing you agree to our{' '}
@@ -278,9 +296,11 @@ export default function Home() {
 
         <AuthErrorNotice message={error} />
 
-        <p className="text-center text-[13px] text-muted-foreground">
-          New here? Use your email — we will set your account up as you sign in.
-        </p>
+        {!onboardingHandle ? (
+          <p className="text-center text-[13px] text-muted-foreground">
+            New here? Use your email — we will set your account up as you sign in.
+          </p>
+        ) : null}
       </div>
     </AuthShell>
   );

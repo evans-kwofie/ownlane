@@ -12,3 +12,5 @@ coverage/
 .vinext/
 .wrangler/
 dev.vars
+.dev.vars
+.dev.vars.*

@@ -6,6 +6,11 @@
     "nodejs_compat"
   ],
   "main": "vinext/server/fetch-handler",
+  "vars": {
+    // Where the app Worker lives. Marketing forwards name checks and onboarding
+    // hand-offs to it because the app owns accounts and public names.
+    "OWNLANE_API_ORIGIN": "https://ownlane-dashboard-staging.evanskwofie67.workers.dev"
+  },
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",

@@ -1,30 +1,69 @@
-import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
-import { SmoothScroll } from "@/components/smooth-scroll";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import type { ReactNode } from 'react';
+import { SmoothScroll } from '@/components/smooth-scroll';
+import './globals.css';
 
-const siteUrl = new URL("https://useownlane.com");
-const description = "Ownlane is the control centre for your online identity: one profile, every platform, always current.";
+const siteUrl = new URL('https://useownlane.com');
+const description =
+  'Ownlane is the control centre for your online identity: one profile, every platform, always current.';
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
-  title: { default: "Ownlane | One profile. Every platform. Always current.", template: "%s | Ownlane" },
+  title: {
+    default: 'Ownlane | One profile. Every platform. Always current.',
+    template: '%s | Ownlane',
+  },
   description,
-  applicationName: "Ownlane",
-  keywords: ["creator platform", "creator storefront", "sell digital products", "creator business", "AI products", "creator memberships", "creator bookings"],
-  authors: [{ name: "Ownlane", url: siteUrl }],
-  creator: "Ownlane",
-  publisher: "Ownlane",
-  category: "Creator economy",
-  alternates: { canonical: "/" },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
-  openGraph: { type: "website", locale: "en_US", url: "/", siteName: "Ownlane", title: "Ownlane | Your brand. Your audience. Your business.", description },
-  twitter: { card: "summary_large_image", title: "Ownlane | Your brand. Your audience. Your business.", description },
-  icons: { icon: "/favicon.ico" },
+  applicationName: 'Ownlane',
+  keywords: [
+    'creator platform',
+    'creator storefront',
+    'sell digital products',
+    'creator business',
+    'AI products',
+    'creator memberships',
+    'creator bookings',
+  ],
+  authors: [{ name: 'Ownlane', url: siteUrl.origin }],
+  creator: 'Ownlane',
+  publisher: 'Ownlane',
+  category: 'Creator economy',
+  alternates: { canonical: '/' },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: '/',
+    siteName: 'Ownlane',
+    title: 'Ownlane | One profile. Every platform. Always current.',
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ownlane | One profile. Every platform. Always current.',
+    description,
+  },
+  icons: { icon: '/favicon.ico' },
 };
 
-export const viewport: Viewport = { themeColor: "#ff4d00", colorScheme: "light" };
+export const viewport: Viewport = { themeColor: '#ff4d00', colorScheme: 'light' };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="en" className="h-full antialiased"><body className="flex min-h-full flex-col"><SmoothScroll>{children}</SmoothScroll></body></html>;
+  return (
+    <html lang="en" className="h-full antialiased">
+      <body className="flex min-h-full flex-col">
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
+    </html>
+  );
 }
